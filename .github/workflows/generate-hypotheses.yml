@@ -1,0 +1,151 @@
+name: 経済学仮説生成システム
+
+on:
+  # 定期実行: 毎日午前9時（JST）に実行
+  schedule:
+    - cron: '0 0 * * *'  # UTC 00:00 = JST 09:00
+  
+  # 手動トリガー: GitHub UIから手動実行可能
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: '強制更新フラグ'
+        required: false
+        default: 'false'
+        type: boolean
+  
+  # プッシュトリガー: mainブランチへのプッシュ時に実行
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/**'
+
+jobs:
+  generate-hypotheses:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # リポジトリへの書き込み権限
+      pages: write     # GitHub Pagesへの書き込み権限
+      id-token: write  # OIDC token権限
+    
+    steps:
+    - name: リポジトリのチェックアウト
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Python環境のセットアップ
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Python依存関係のインストール
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r scripts/requirements.txt
+    
+    - name: 経済学仮説の生成
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      run: |
+        cd scripts
+        python generate_hypotheses.py
+        
+        # 生成されたファイルを確認
+        if [ -f "hypotheses.json" ]; then
+          echo "✅ 仮説生成完了"
+          cat hypotheses.json | jq '.total_hypotheses'
+        else
+          echo "❌ 仮説生成失敗"
+          exit 1
+        fi
+    
+    - name: 生成結果をWebサイト用に配置
+      run: |
+        # 生成されたJSONファイルをpublicディレクトリにコピー
+        mkdir -p public/data
+        cp scripts/hypotheses.json public/data/
+        
+        # 最終更新日時を記録
+        echo "{\"last_updated\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > public/data/metadata.json
+        
+        echo "📁 ファイル配置完了"
+        ls -la public/data/
+    
+    - name: Node.js環境のセットアップ
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: フロントエンド依存関係のインストール
+      run: npm ci
+    
+    - name: Reactアプリケーションのビルド
+      run: |
+        npm run build
+        echo "🏗️ ビルド完了"
+        ls -la dist/
+    
+    - name: GitHub Pagesへのデプロイ
+      uses: actions/deploy-pages@v3
+      with:
+        artifact_name: github-pages
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 変更をコミット・プッシュ
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # 変更があるかチェック
+        if [ -n "$(git status --porcelain)" ]; then
+          git add public/data/
+          git add scripts/hypothesis_generator.log || true
+          git commit -m "🤖 経済学仮説を自動生成・更新 $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+          echo "📤 変更をプッシュしました"
+        else
+          echo "📝 変更なし - プッシュをスキップ"
+        fi
+    
+    - name: 実行結果の通知
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ 経済学仮説生成システムが正常に実行されました"
+          echo "🌐 サイトURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+        else
+          echo "❌ 実行中にエラーが発生しました"
+        fi
+    
+    - name: アーティファクトのアップロード
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: hypothesis-generation-logs
+        path: |
+          scripts/hypothesis_generator.log
+          scripts/hypotheses.json
+        retention-days: 30
+
+  # GitHub Pagesのビルドとデプロイ
+  deploy-pages:
+    needs: generate-hypotheses
+    runs-on: ubuntu-latest
+    
+    permissions:
+      pages: write
+      id-token: write
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: GitHub Pagesへのデプロイ
+      id: deployment
+      uses: actions/deploy-pages@v3
+
