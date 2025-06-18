@@ -1,16 +1,32 @@
-# 経済学仮説生成システム
+# 経済学仮説生成システム - 強化版
 
-LLMによる経済学の仮説生成・研究アイデア創出を実現するシステムです。GitHub ActionsでGemini APIによる分析を定期実行し、最新の経済動向に基づいた革新的な研究仮説を自動生成します。
+LLMによる経済学の仮説生成・研究アイデア創出を実現するシステムです。GitHub ActionsでGemini APIによる分析を定期実行し、**幅広いデータソースから収集した最新の経済動向**に基づいた革新的な研究仮説を自動生成します。
 
-## 🌟 特徴
+## 🌟 新機能・強化ポイント
+
+### 📊 多元的データソース統合
+- **FRED (Federal Reserve Economic Data)**: 米国の主要経済指標
+- **世界銀行データ**: 国際的な経済・開発指標
+- **Yahoo Finance**: リアルタイム金融市場データ
+- **CoinGecko**: 暗号通貨市場データ
+- **経済カレンダー**: 重要な経済イベント情報
+
+### 🔍 高度な分析機能
+- **市場センチメント分析**: 複数指標からの総合的な市場心理判定
+- **トレンド識別**: 主要経済トレンドの自動抽出
+- **相互作用分析**: 伝統的指標とデジタル経済指標の関係性
+- **政策含意評価**: 研究結果の政策的インパクト評価
+
+### 🚀 システム特徴
 
 - **AI駆動の仮説生成**: Gemini APIを活用した高度な経済学仮説の自動生成
 - **定期自動更新**: GitHub Actionsによる毎日の自動分析・更新
 - **美しいWebインターフェース**: React製のモダンなダッシュボード
 - **研究支援機能**: 推奨研究手法や重要要因の提示
 - **信頼度評価**: AI による仮説の信頼度スコア
+- **包括的データ統合**: 複数ソースからのリアルタイムデータ収集
 
-## 🚀 システム構成
+## 🏗️ システム構成
 
 ```
 economics-hypothesis-generator/
@@ -18,8 +34,8 @@ economics-hypothesis-generator/
 │   ├── components/         # UIコンポーネント
 │   ├── App.jsx            # メインアプリケーション
 │   └── ...
-├── scripts/               # バックエンドスクリプト
-│   ├── generate_hypotheses.py  # Gemini API分析スクリプト
+├── scripts/               # 強化されたバックエンドスクリプト
+│   ├── generate_hypotheses.py  # 多元的データ収集・分析スクリプト
 │   └── requirements.txt   # Python依存関係
 ├── .github/workflows/     # GitHub Actions設定
 │   └── generate-hypotheses.yml
@@ -29,25 +45,31 @@ economics-hypothesis-generator/
 └── README.md
 ```
 
-## 📊 機能概要
+## 📈 データ収集機能
 
-### 1. 仮説生成エンジン
-- 最新の経済指標データを自動収集
-- Gemini APIによる高度な分析と仮説生成
-- 複数の研究分野をカバー（金融政策、労働経済学、国際経済学など）
+### 1. 経済指標データ
+- **FRED**: GDP、CPI、失業率、金利、工業生産指数など
+- **世界銀行**: GDP成長率、インフレ率、貿易収支、FDI流入など
+- **リアルタイム更新**: 最新の経済統計を自動取得
 
-### 2. 自動化システム
-- **定期実行**: 毎日午前9時（JST）に自動実行
-- **手動トリガー**: GitHub UIから任意のタイミングで実行可能
-- **継続的デプロイ**: 生成結果を自動的にWebサイトに反映
+### 2. 金融市場データ
+- **株式指数**: S&P 500、NASDAQ、ダウ平均
+- **為替レート**: USD/JPY、EUR/USD
+- **商品価格**: 金、原油
+- **債券**: 10年国債利回り
+- **ボラティリティ**: VIX指数
 
-### 3. Webダッシュボード
-- 生成された仮説の一覧表示
-- 信頼度・研究分野別の分類
-- 推奨研究手法と重要要因の表示
-- レスポンシブデザイン対応
+### 3. デジタル経済データ
+- **暗号通貨**: Bitcoin、Ethereum、主要アルトコイン
+- **価格変動**: 24時間変動率、市場キャップ
+- **市場動向**: デジタル資産の普及状況
 
-## 🛠️ セットアップ手順
+### 4. 経済カレンダー
+- **重要イベント**: 金利決定、雇用統計、GDP発表
+- **政策発表**: 中央銀行の政策変更
+- **国際会議**: G7、G20などの重要会合
+
+## 🔧 セットアップ手順
 
 ### 1. リポジトリの準備
 ```bash
@@ -59,6 +81,7 @@ cd economics-hypothesis-generator
 GitHub リポジトリの Settings > Secrets and variables > Actions で以下を設定：
 
 - `GEMINI_API_KEY`: Google Gemini APIキー
+- `FRED_API_KEY`: FRED APIキー（オプション、より多くのデータ取得に必要）
 
 ### 3. GitHub Pagesの有効化
 1. リポジトリの Settings > Pages
@@ -68,6 +91,24 @@ GitHub リポジトリの Settings > Secrets and variables > Actions で以下�
 ### 4. 初回実行
 - Actions タブから "経済学仮説生成システム" ワークフローを手動実行
 - または、mainブランチにプッシュして自動実行
+
+## 📊 生成される仮説の例（強化版）
+
+```json
+{
+  "title": "多元的データソースによる金融政策効果の非線形分析",
+  "description": "従来の金融政策分析は単一データソースに依存していたが、FRED、世界銀行、暗号通貨市場データを統合することで、政策効果の非線形性と波及メカニズムをより精密に分析できる。",
+  "category": "金融政策",
+  "confidence": 88,
+  "research_methods": ["多変量時系列分析", "機械学習回帰", "ネットワーク分析"],
+  "key_factors": ["政策金利変化", "暗号通貨ボラティリティ", "国際資本フロー"],
+  "data_sources_used": ["FRED", "CoinGecko", "World Bank", "Yahoo Finance"],
+  "policy_implications": ["デジタル資産を考慮した金融政策設計", "クロスボーダー政策協調"],
+  "novelty_score": 92,
+  "feasibility_score": 85,
+  "expected_impact": "中央銀行のデジタル時代における政策フレームワーク再構築に貢献"
+}
+```
 
 ## 📈 使用方法
 
@@ -96,34 +137,51 @@ schedule:
   - cron: '0 */6 * * *'  # 6時間ごと
 ```
 
-### 仮説生成ロジックの調整
-`scripts/generate_hypotheses.py` の以下を編集：
-- `collect_economic_data()`: データ収集ロジック
-- `generate_hypothesis_prompt()`: プロンプト生成
-- Gemini API パラメータ（temperature, topK など）
-
-### UIのカスタマイズ
-`src/App.jsx` を編集してWebインターフェースを変更
-
-## 📋 生成される仮説の例
-
-```json
-{
-  "title": "デジタル通貨普及と消費者行動の変化",
-  "description": "中央銀行デジタル通貨（CBDC）の導入が消費者の支払い行動と貯蓄パターンに与える影響について、行動経済学の観点から分析する必要がある。",
-  "category": "金融政策",
-  "confidence": 85,
-  "research_methods": ["実験経済学", "フィールド調査", "データマイニング"],
-  "key_factors": ["プライバシー懸念", "利便性", "金融包摂"],
-  "generated_at": "2025-06-17T10:30:00Z"
-}
+### データソースの追加
+`scripts/generate_hypotheses.py` の `EconomicDataCollector` クラスに新しいメソッドを追加：
+```python
+def collect_new_data_source(self) -> List[EconomicIndicator]:
+    # 新しいデータソースからの収集ロジック
+    pass
 ```
+
+### 仮説生成ロジックの調整
+- `generate_hypothesis_prompt()`: プロンプト生成の強化
+- Gemini API パラメータ（temperature, topK など）の調整
+- 分析対象指標の追加・変更
+
+## 🌐 データソース詳細
+
+### FRED (Federal Reserve Economic Data)
+- **提供機関**: セントルイス連邦準備銀行
+- **データ種類**: 米国の主要経済統計
+- **更新頻度**: リアルタイム〜月次
+- **API制限**: 無料版は1日1000リクエスト
+
+### 世界銀行オープンデータ
+- **提供機関**: 世界銀行
+- **データ種類**: 国際開発・経済指標
+- **更新頻度**: 年次〜四半期
+- **API制限**: 無制限（適切な使用範囲内）
+
+### Yahoo Finance
+- **提供機関**: Yahoo
+- **データ種類**: 株価、為替、商品価格
+- **更新頻度**: リアルタイム
+- **API制限**: 非公式API、適度な使用推奨
+
+### CoinGecko
+- **提供機関**: CoinGecko
+- **データ種類**: 暗号通貨価格・市場データ
+- **更新頻度**: リアルタイム
+- **API制限**: 無料版は月50,000リクエスト
 
 ## 🔒 セキュリティ
 
 - APIキーはGitHub Secretsで安全に管理
 - 最小権限の原則に基づくアクセス制御
 - 定期的な依存関係の更新
+- レート制限の遵守
 
 ## 📝 ライセンス
 
@@ -131,7 +189,7 @@ MIT License
 
 ## 🤝 貢献
 
-プルリクエストや Issue の報告を歓迎します。
+プルリクエストや Issue の報告を歓迎します。特に新しいデータソースの追加や分析手法の改善についてのご提案をお待ちしています。
 
 ## 📞 サポート
 
@@ -139,5 +197,6 @@ MIT License
 
 ---
 
-**Powered by Gemini AI** 🧠✨
+**Powered by Gemini AI** 🧠✨  
+**Enhanced with Multi-Source Economic Data** 📊🌐
 
