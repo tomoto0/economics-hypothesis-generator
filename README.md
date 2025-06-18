@@ -1,5 +1,9 @@
 # 経済学仮説生成システム - 強化版
 
+## はじめに
+
+このプロジェクトは、AI（特にGemini API）を活用して経済学の革新的な研究仮説を自動生成するシステムです。多様な経済データソースから最新情報を収集し、高度な分析を通じて、研究者の皆様が新たな発見をするための強力なツールを提供します。
+
 LLMによる経済学の仮説生成・研究アイデア創出を実現するシステムです。GitHub ActionsでGemini APIによる分析を定期実行し、**幅広いデータソースから収集した最新の経済動向**に基づいた革新的な研究仮説を自動生成します。
 
 ## 🌟 新機能・強化ポイント
@@ -34,6 +38,13 @@ economics-hypothesis-generator/
 │   ├── components/         # UIコンポーネント
 │   ├── App.jsx            # メインアプリケーション
 │   └── ...
+├── economics_api/          # Flaskバックエンド
+│   ├── src/                # バックエンドのソースコード
+│   │   ├── database/       # SQLiteデータベースファイル
+│   │   ├── models/         # データベースモデル
+│   │   ├── routes/         # APIルート定義
+│   │   └── main.py         # アプリケーションのエントリポイント
+│   └── venv/               # Python仮想環境
 ├── scripts/               # 強化されたバックエンドスクリプト
 │   ├── generate_hypotheses.py  # 多元的データ収集・分析スクリプト
 │   └── requirements.txt   # Python依存関係
@@ -199,4 +210,29 @@ MIT License
 
 **Powered by Gemini AI** 🧠✨  
 **Enhanced with Multi-Source Economic Data** 📊🌐
+
+
+
+## 💻 ローカル開発環境のセットアップ
+
+### 1. フロントエンドのセットアップ
+
+```bash
+cd economics-hypothesis-generator
+pnpm install
+pnpm dev
+```
+
+### 2. バックエンドのセットアップ
+
+```bash
+cd economics-hypothesis-generator/economics_api
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python src/main.py
+```
+
+フロントエンドの `src/App.jsx` の `API_BASE_URL` を `http://localhost:5000/api` に戻してください。
+
 

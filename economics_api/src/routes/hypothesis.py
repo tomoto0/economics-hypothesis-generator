@@ -67,7 +67,8 @@ def get_hypothesis(hypothesis_id):
 def generate_hypotheses():
     """新しい仮説を生成"""
     try:
-        # サンプルデータ（実際の実装ではGemini APIを使用）
+        # サンプルデータ（実際の実装ではGemini APIと外部データソースを使用）
+        # 現在はデモンストレーションのため、静的なサンプルデータを使用しています。
         sample_hypotheses = [
             {
                 "title": "デジタル通貨普及と消費者行動の変化",
