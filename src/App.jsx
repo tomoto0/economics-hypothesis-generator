@@ -7,14 +7,15 @@ import { Input } from '@/components/ui/input.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog.jsx'
-import { Brain, TrendingUp, BarChart3, Lightbulb, Clock, RefreshCw, Search, Filter, Download, Plus, Eye, Trash2, Star } from 'lucide-react'
+import { Brain, TrendingUp, BarChart3, Lightbulb, Clock, RefreshCw, Search, Filter, Download, Plus, Eye, Trash2, Star, MessageSquare } from 'lucide-react'
+import FeedbackModal from './components/FeedbackModal.jsx'
+import FeedbackSummary from './components/FeedbackSummary.jsx'
 import './App.css'
-
-const API_BASE_URL = 'http://localhost:5000/api'
 
 function App() {
   const [hypotheses, setHypotheses] = useState([])
   const [filteredHypotheses, setFilteredHypotheses] = useState([])
+  const [feedbacks, setFeedbacks] = useState({}) // 仮説IDをキーとするフィードバックデータ
   const [stats, setStats] = useState({
     totalHypotheses: 0,
     averageConfidence: 0,
@@ -28,10 +29,12 @@ function App() {
   const [minConfidence, setMinConfidence] = useState(0)
   const [selectedHypothesis, setSelectedHypothesis] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
+  const [feedbackHypothesis, setFeedbackHypothesis] = useState(null)
 
   useEffect(() => {
     loadHypotheses()
-    loadStats()
+    loadFeedbacks()
   }, [])
 
   useEffect(() => {
@@ -41,88 +44,171 @@ function App() {
   const loadHypotheses = async () => {
     setIsLoading(true)
     try {
-      const params = new URLSearchParams()
-      if (selectedCategory !== 'all') params.append('category', selectedCategory)
-      if (minConfidence > 0) params.append('min_confidence', minConfidence)
-      if (searchTerm) params.append('search', searchTerm)
-
-      const response = await fetch(`${API_BASE_URL}/hypotheses?${params}`)
+      // GitHub Pages環境では、静的JSONファイルから読み込み
+      const response = await fetch('./data/hypotheses.json')
       const data = await response.json()
       
-      if (data.success) {
-        setHypotheses(data.data)
-        setLastUpdated(new Date())
+      if (data.hypotheses) {
+        setHypotheses(data.hypotheses)
+        setLastUpdated(new Date(data.generated_at))
+        
+        // 統計情報を計算
+        const categories = [...new Set(data.hypotheses.map(h => h.category))]
+        const avgConfidence = data.hypotheses.reduce((sum, h) => sum + h.confidence, 0) / data.hypotheses.length
+        
+        setStats({
+          totalHypotheses: data.hypotheses.length,
+          averageConfidence: Math.round(avgConfidence),
+          categoriesCount: categories.length,
+          categories
+        })
       }
     } catch (error) {
       console.error('仮説の読み込みに失敗しました:', error)
+      // フォールバック: サンプルデータ
+      loadSampleData()
     } finally {
       setIsLoading(false)
     }
   }
 
-  const loadStats = async () => {
+  const loadFeedbacks = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/hypotheses/stats`)
-      const data = await response.json()
+      // GitHub Issues APIからフィードバックを取得
+      const response = await fetch('https://api.github.com/repos/tomoto0/economics-hypothesis-generator/issues?labels=feedback')
+      const issues = await response.json()
       
-      if (data.success) {
-        setStats(data.data)
-      }
-    } catch (error) {
-      console.error('統計情報の読み込みに失敗しました:', error)
-    }
-  }
-
-  const generateNewHypotheses = async () => {
-    setIsGenerating(true)
-    try {
-      const response = await fetch(`${API_BASE_URL}/hypotheses/generate`, {
-        method: 'POST'
+      const feedbackData = {}
+      issues.forEach(issue => {
+        try {
+          // Issue本文からフィードバックデータを抽出
+          const match = issue.body.match(/```json\n([\s\S]*?)\n```/)
+          if (match) {
+            const feedback = JSON.parse(match[1])
+            const hypothesisId = feedback.hypothesis_id
+            
+            if (!feedbackData[hypothesisId]) {
+              feedbackData[hypothesisId] = []
+            }
+            
+            feedbackData[hypothesisId].push({
+              ...feedback.feedback,
+              timestamp: issue.created_at,
+              issue_number: issue.number
+            })
+          }
+        } catch (e) {
+          console.warn('フィードバックデータの解析に失敗:', e)
+        }
       })
-      const data = await response.json()
       
-      if (data.success) {
-        await loadHypotheses()
-        await loadStats()
-      }
+      setFeedbacks(feedbackData)
     } catch (error) {
-      console.error('仮説の生成に失敗しました:', error)
-    } finally {
-      setIsGenerating(false)
+      console.error('フィードバックの読み込みに失敗しました:', error)
     }
   }
 
-  const deleteHypothesis = async (id) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/hypotheses/${id}`, {
-        method: 'DELETE'
-      })
-      const data = await response.json()
-      
-      if (data.success) {
-        await loadHypotheses()
-        await loadStats()
+  const loadSampleData = () => {
+    const sampleHypotheses = [
+      {
+        id: 1,
+        title: "多元的データソースによる金融政策効果の非線形分析",
+        description: "従来の金融政策分析は単一データソースに依存していたが、FRED、世界銀行、暗号通貨市場データを統合することで、政策効果の非線形性と波及メカニズムをより精密に分析できる。",
+        category: "金融政策",
+        confidence: 88,
+        research_methods: ["多変量時系列分析", "機械学習回帰", "ネットワーク分析"],
+        key_factors: ["政策金利変化", "暗号通貨ボラティリティ", "国際資本フロー"],
+        generated_at: new Date().toISOString()
+      },
+      {
+        id: 2,
+        title: "リアルタイム経済指標統合による景気循環予測モデル",
+        description: "従来の景気予測は月次・四半期データに依存していたが、金融市場、暗号通貨、経済カレンダーイベントをリアルタイムで統合することで、より迅速で精度の高い景気転換点の予測が可能になる。",
+        category: "マクロ経済学",
+        confidence: 82,
+        research_methods: ["深層学習", "ベイジアン推定", "リアルタイム計量経済学"],
+        key_factors: ["高頻度金融データ", "経済イベントタイミング", "市場期待"],
+        generated_at: new Date().toISOString()
       }
+    ]
+    
+    setHypotheses(sampleHypotheses)
+    setStats({
+      totalHypotheses: sampleHypotheses.length,
+      averageConfidence: 85,
+      categoriesCount: 2,
+      categories: ["金融政策", "マクロ経済学"]
+    })
+    setLastUpdated(new Date())
+  }
+
+  const submitFeedback = async (hypothesisId, feedbackData) => {
+    try {
+      const hypothesis = hypotheses.find(h => h.id === hypothesisId)
+      if (!hypothesis) return
+
+      // GitHub Issue作成用のデータ
+      const issueData = {
+        title: `フィードバック: ${hypothesis.title}`,
+        body: `## 仮説へのフィードバック
+
+**仮説ID**: ${hypothesisId}
+**仮説タイトル**: ${hypothesis.title}
+
+### 評価
+- **妥当性**: ${feedbackData.validity}/5
+- **実現可能性**: ${feedbackData.feasibility}/5
+- **新規性**: ${feedbackData.novelty}/5
+- **政策的重要性**: ${feedbackData.policy_importance}/5
+- **総合評価**: ${feedbackData.overall}/5
+
+### コメント
+${feedbackData.comment || 'なし'}
+
+### 改善提案
+${feedbackData.suggestions || 'なし'}
+
+### 関連研究
+${feedbackData.related_research || 'なし'}
+
+### 研究者情報
+${feedbackData.reviewer_info || '匿名'}
+
+---
+
+\`\`\`json
+{
+  "hypothesis_id": ${hypothesisId},
+  "feedback": ${JSON.stringify(feedbackData, null, 2)}
+}
+\`\`\``,
+        labels: ['feedback', 'user-input']
+      }
+
+      // GitHub Issues APIに投稿（実際の実装では認証が必要）
+      console.log('フィードバックデータ:', issueData)
+      
+      // ローカルでフィードバックを更新（デモ用）
+      const newFeedback = {
+        ...feedbackData,
+        timestamp: new Date().toISOString()
+      }
+      
+      setFeedbacks(prev => ({
+        ...prev,
+        [hypothesisId]: [...(prev[hypothesisId] || []), newFeedback]
+      }))
+
+      alert('フィードバックを送信しました！GitHub Issuesで確認できます。')
     } catch (error) {
-      console.error('仮説の削除に失敗しました:', error)
+      console.error('フィードバック送信エラー:', error)
+      throw error
     }
   }
 
-  const exportHypotheses = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/hypotheses/export`)
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'hypotheses.csv'
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-    } catch (error) {
-      console.error('エクスポートに失敗しました:', error)
-    }
+  const openFeedbackModal = (hypothesis) => {
+    setFeedbackHypothesis(hypothesis)
+    setFeedbackModalOpen(true)
   }
 
   const filterHypotheses = () => {
@@ -163,13 +249,6 @@ function App() {
     return 'bg-red-100 text-red-800 border-red-200'
   }
 
-  const getScoreColor = (score) => {
-    if (score >= 90) return 'text-green-600'
-    if (score >= 75) return 'text-blue-600'
-    if (score >= 60) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
   const uniqueCategories = [...new Set(hypotheses.map(h => h.category))]
 
   return (
@@ -196,18 +275,6 @@ function App() {
                   最終更新: {lastUpdated.toLocaleString('ja-JP')}
                 </div>
               )}
-              <Button onClick={exportHypotheses} variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                エクスポート
-              </Button>
-              <Button 
-                onClick={generateNewHypotheses} 
-                disabled={isGenerating}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-              >
-                <Plus className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-                新規生成
-              </Button>
               <Button onClick={loadHypotheses} disabled={isLoading} variant="outline">
                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 更新
@@ -332,10 +399,10 @@ function App() {
             <h2 className="text-xl font-semibold text-gray-900">
               生成された研究仮説 ({filteredHypotheses.length}件)
             </h2>
-            {(isLoading || isGenerating) && (
+            {isLoading && (
               <div className="flex items-center text-sm text-gray-500">
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                {isGenerating ? '新しい仮説を生成中...' : '読み込み中...'}
+                読み込み中...
               </div>
             )}
           </div>
@@ -376,15 +443,23 @@ function App() {
                           <Badge className={getConfidenceColor(hypothesis.confidence)}>
                             信頼度 {hypothesis.confidence}%
                           </Badge>
-                          {hypothesis.noveltyScore && (
-                            <Badge variant="outline" className="border-purple-200 text-purple-700">
-                              <Star className="h-3 w-3 mr-1" />
-                              新規性 {hypothesis.noveltyScore}%
+                          {feedbacks[hypothesis.id] && feedbacks[hypothesis.id].length > 0 && (
+                            <Badge variant="outline" className="border-green-200 text-green-700">
+                              <MessageSquare className="h-3 w-3 mr-1" />
+                              {feedbacks[hypothesis.id].length} 件のフィードバック
                             </Badge>
                           )}
                         </div>
                       </div>
                       <div className="flex space-x-1 ml-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => openFeedbackModal(hypothesis)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button 
@@ -395,133 +470,121 @@ function App() {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
-                              <DialogTitle>{hypothesis.title}</DialogTitle>
+                              <DialogTitle className="text-xl">{selectedHypothesis?.title}</DialogTitle>
                               <DialogDescription>
-                                詳細情報
+                                <Badge className={getConfidenceColor(selectedHypothesis?.confidence || 0)}>
+                                  信頼度 {selectedHypothesis?.confidence}%
+                                </Badge>
                               </DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                               <div>
-                                <h4 className="font-medium mb-2">説明</h4>
-                                <p className="text-sm text-gray-700 leading-relaxed">
-                                  {hypothesis.description}
+                                <h4 className="font-medium mb-2">仮説の詳細</h4>
+                                <p className="text-gray-700 leading-relaxed">{selectedHypothesis?.description}</p>
+                              </div>
+                              
+                              <Separator />
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                  <h4 className="font-medium mb-3">推奨研究手法</h4>
+                                  <div className="space-y-2">
+                                    {selectedHypothesis?.research_methods?.map((method, index) => (
+                                      <Badge key={index} variant="outline" className="mr-2 mb-2">
+                                        {method}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <h4 className="font-medium mb-3">重要要因</h4>
+                                  <div className="space-y-2">
+                                    {selectedHypothesis?.key_factors?.map((factor, index) => (
+                                      <Badge key={index} variant="secondary" className="mr-2 mb-2">
+                                        {factor}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <Separator />
+                              
+                              <div>
+                                <h4 className="font-medium mb-2">生成日時</h4>
+                                <p className="text-sm text-gray-600">
+                                  {formatDate(selectedHypothesis?.generated_at)}
                                 </p>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <h4 className="font-medium mb-2">スコア</h4>
-                                  <div className="space-y-1">
-                                    <div className="flex justify-between">
-                                      <span className="text-sm">信頼度:</span>
-                                      <span className={`text-sm font-medium ${getScoreColor(hypothesis.confidence)}`}>
-                                        {hypothesis.confidence}%
-                                      </span>
-                                    </div>
-                                    {hypothesis.noveltyScore && (
-                                      <div className="flex justify-between">
-                                        <span className="text-sm">新規性:</span>
-                                        <span className={`text-sm font-medium ${getScoreColor(hypothesis.noveltyScore)}`}>
-                                          {hypothesis.noveltyScore}%
-                                        </span>
-                                      </div>
-                                    )}
-                                    {hypothesis.feasibilityScore && (
-                                      <div className="flex justify-between">
-                                        <span className="text-sm">実現可能性:</span>
-                                        <span className={`text-sm font-medium ${getScoreColor(hypothesis.feasibilityScore)}`}>
-                                          {hypothesis.feasibilityScore}%
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div>
-                                  <h4 className="font-medium mb-2">メタデータ</h4>
-                                  <div className="space-y-1 text-sm text-gray-600">
-                                    <div>カテゴリ: {hypothesis.category}</div>
-                                    <div>生成日時: {formatDate(hypothesis.generatedAt)}</div>
-                                  </div>
-                                </div>
-                              </div>
-                              <div>
-                                <h4 className="font-medium mb-2">推奨研究手法</h4>
-                                <div className="flex flex-wrap gap-1">
-                                  {hypothesis.researchMethods.map((method, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
-                                      {method}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                              <div>
-                                <h4 className="font-medium mb-2">重要要因</h4>
-                                <div className="flex flex-wrap gap-1">
-                                  {hypothesis.keyFactors.map((factor, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs bg-blue-50">
-                                      {factor}
-                                    </Badge>
-                                  ))}
-                                </div>
                               </div>
                             </div>
                           </DialogContent>
                         </Dialog>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => deleteHypothesis(hypothesis.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
-                    <CardDescription className="text-sm leading-relaxed line-clamp-3">
-                      {hypothesis.description}
-                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <CardDescription className="text-sm text-gray-600 mb-4 line-clamp-3">
+                      {hypothesis.description}
+                    </CardDescription>
+                    
+                    {/* フィードバック表示 */}
+                    {feedbacks[hypothesis.id] && (
+                      <div className="mb-4">
+                        <FeedbackSummary 
+                          hypothesis={hypothesis} 
+                          feedbacks={feedbacks[hypothesis.id]} 
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="space-y-3">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">推奨研究手法</h4>
+                        <h5 className="text-xs font-medium text-gray-500 mb-1">推奨研究手法</h5>
                         <div className="flex flex-wrap gap-1">
-                          {hypothesis.researchMethods.slice(0, 3).map((method, index) => (
+                          {hypothesis.research_methods?.slice(0, 3).map((method, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {method}
                             </Badge>
                           ))}
-                          {hypothesis.researchMethods.length > 3 && (
+                          {hypothesis.research_methods?.length > 3 && (
                             <Badge variant="outline" className="text-xs">
-                              +{hypothesis.researchMethods.length - 3}
+                              +{hypothesis.research_methods.length - 3}
                             </Badge>
                           )}
                         </div>
                       </div>
-                      <Separator />
+                      
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">重要要因</h4>
+                        <h5 className="text-xs font-medium text-gray-500 mb-1">重要要因</h5>
                         <div className="flex flex-wrap gap-1">
-                          {hypothesis.keyFactors.slice(0, 3).map((factor, index) => (
-                            <Badge key={index} variant="outline" className="text-xs bg-blue-50">
+                          {hypothesis.key_factors?.slice(0, 3).map((factor, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
                               {factor}
                             </Badge>
                           ))}
-                          {hypothesis.keyFactors.length > 3 && (
-                            <Badge variant="outline" className="text-xs bg-blue-50">
-                              +{hypothesis.keyFactors.length - 3}
+                          {hypothesis.key_factors?.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{hypothesis.key_factors.length - 3}
                             </Badge>
                           )}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 pt-2 flex justify-between items-center">
-                        <span>生成日時: {formatDate(hypothesis.generatedAt)}</span>
-                        {hypothesis.feasibilityScore && (
-                          <span className={`font-medium ${getScoreColor(hypothesis.feasibilityScore)}`}>
-                            実現可能性: {hypothesis.feasibilityScore}%
-                          </span>
-                        )}
+                    </div>
+                    
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>生成日時: {formatDate(hypothesis.generated_at)}</span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => openFeedbackModal(hypothesis)}
+                          className="text-blue-600 hover:text-blue-800 h-auto p-1"
+                        >
+                          フィードバック
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -529,54 +592,19 @@ function App() {
               ))}
             </div>
           )}
-
-          {!isLoading && filteredHypotheses.length === 0 && (
-            <Card className="text-center py-12 bg-white/70 backdrop-blur-sm">
-              <CardContent>
-                <Lightbulb className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">仮説が見つかりません</h3>
-                <p className="text-gray-600 mb-4">
-                  {hypotheses.length === 0 
-                    ? '新しい仮説を生成してください。' 
-                    : '検索条件を変更してみてください。'
-                  }
-                </p>
-                {hypotheses.length === 0 && (
-                  <Button 
-                    onClick={generateNewHypotheses}
-                    disabled={isGenerating}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    新しい仮説を生成
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* フッター情報 */}
-        <div className="mt-12 text-center">
-          <Card className="bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 border-indigo-200 bg-white/70 backdrop-blur-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
-                  <Brain className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Powered by AI & Advanced Analytics
-                </span>
-              </div>
-              <p className="text-sm text-indigo-700 max-w-2xl mx-auto">
-                このシステムは最新の経済データと学術論文を分析し、
-                革新的な研究仮説を自動生成します。高度なフィルタリング機能と
-                詳細な分析により、研究者の創造的な発見をサポートします。
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </main>
+
+      {/* フィードバックモーダル */}
+      <FeedbackModal
+        hypothesis={feedbackHypothesis}
+        isOpen={feedbackModalOpen}
+        onClose={() => {
+          setFeedbackModalOpen(false)
+          setFeedbackHypothesis(null)
+        }}
+        onSubmit={submitFeedback}
+      />
     </div>
   )
 }
