@@ -6,22 +6,22 @@
 
 LLMによる経済学の仮説生成・研究アイデア創出を実現するシステムです。GitHub ActionsでGemini APIによる分析を定期実行し、**幅広いデータソースから収集した最新の経済動向**に基づいた革新的な研究仮説を自動生成します。
 
-## 🌟 新機能・強化ポイント
+## 🆕 新機能: フィードバック・評価システム
 
-### 📊 多元的データソース統合
-- **FRED (Federal Reserve Economic Data)**: 米国の主要経済指標
-- **世界銀行データ**: 国際的な経済・開発指標
-- **Yahoo Finance**: リアルタイム金融市場データ
-- **CoinGecko**: 暗号通貨市場データ
-- **経済カレンダー**: 重要な経済イベント情報
+### ✨ 主要機能
+- **5段階評価システム**: 妥当性、実現可能性、新規性、政策的重要性、総合評価
+- **詳細フィードバック**: コメント、改善提案、関連研究の指摘
+- **GitHub Issue連携**: フィードバックは自動的にGitHub Issueとして投稿
+- **リアルタイム集計**: フィードバック統計の自動更新・表示
+- **研究者情報**: 任意で所属機関や専門分野を記録
 
-### 🔍 高度な分析機能
-- **市場センチメント分析**: 複数指標からの総合的な市場心理判定
-- **トレンド識別**: 主要経済トレンドの自動抽出
-- **相互作用分析**: 伝統的指標とデジタル経済指標の関係性
-- **政策含意評価**: 研究結果の政策的インパクト評価
+### 🔄 自動化システム
+- **定期実行**: 毎日午前9時（JST）に仮説生成とフィードバック更新
+- **Issue連携**: フィードバックIssue作成時の自動処理
+- **手動トリガー**: GitHub UIから任意のタイミングで実行可能
+- **継続的デプロイ**: 生成結果とフィードバックを自動的にWebサイトに反映
 
-### 🚀 システム特徴
+## 🌐 アクセス
 
 - **AI駆動の仮説生成**: Gemini APIを活用した高度な経済学仮説の自動生成
 - **定期自動更新**: GitHub Actionsによる毎日の自動分析・更新
@@ -137,79 +137,115 @@ GitHub リポジトリの Settings > Secrets and variables > Actions で以下�
 - **Webサイト**: https://tomoto0.github.io/economics-hypothesis-generator
 - **JSONファイル**: `public/data/hypotheses.json`
 - **ログファイル**: Actions の Artifacts からダウンロード
+- **GitHubリポジトリ**: https://github.com/tomoto0/economics-hypothesis-generator
+- **フィードバックIssues**: https://github.com/tomoto0/economics-hypothesis-generator/issues?q=label%3Afeedback
 
-## 🔧 カスタマイズ
+## 📊 データソース（強化版）
 
-### 分析頻度の変更
-`.github/workflows/generate-hypotheses.yml` の cron 設定を変更：
-```yaml
-schedule:
-  - cron: '0 0 * * *'  # 毎日午前9時（JST）
-  - cron: '0 */6 * * *'  # 6時間ごと
+### 経済データ
+- **FRED (Federal Reserve Economic Data)**: 米国経済指標
+- **World Bank Open Data**: 国際経済・開発指標
+- **Yahoo Finance**: 金融市場データ
+- **CoinGecko API**: 暗号通貨市場データ
+- **Economic Calendar**: 経済イベント・発表予定
+
+### AI分析
+- **Gemini Pro**: 高度な仮説生成と分析
+- **多元的データ統合**: 複数ソースからの包括的分析
+- **リアルタイム処理**: 最新データに基づく動的分析
+
+## 🚀 使用方法
+
+### 1. 仮説の閲覧
+1. [Webサイト](https://tomoto0.github.io/economics-hypothesis-generator) にアクセス
+2. 生成された経済学仮説を閲覧
+3. カテゴリ、信頼度、キーワードでフィルタリング可能
+
+### 2. フィードバックの投稿
+1. 各仮説カードの「フィードバック」ボタンをクリック
+2. 5段階評価とコメントを入力
+3. 送信すると自動的にGitHub Issueとして投稿
+
+### 3. フィードバックの確認
+- 各仮説にフィードバック数と平均評価が表示
+- 詳細表示でカテゴリ別評価と最新コメントを確認
+- GitHub Issuesで全フィードバックの履歴を確認
+
+## ⚙️ 設定
+
+### 必要な環境変数
+```bash
+GEMINI_API_KEY=your_gemini_api_key
+FRED_API_KEY=your_fred_api_key  # 任意
+GITHUB_TOKEN=your_github_token  # フィードバック機能用
 ```
 
-### データソースの追加
-`scripts/generate_hypotheses.py` の `EconomicDataCollector` クラスに新しいメソッドを追加：
-```python
-def collect_new_data_source(self) -> List[EconomicIndicator]:
-    # 新しいデータソースからの収集ロジック
-    pass
-```
+### GitHub Secrets設定
+1. リポジトリの Settings → Secrets and variables → Actions
+2. 以下のシークレットを追加:
+   - `GEMINI_API_KEY`: Gemini APIキー
+   - `FRED_API_KEY`: FRED APIキー（任意）
 
-### 仮説生成ロジックの調整
-- `generate_hypothesis_prompt()`: プロンプト生成の強化
-- Gemini API パラメータ（temperature, topK など）の調整
-- 分析対象指標の追加・変更
+## 🔧 技術仕様
 
-## 🌐 データソース詳細
+### フロントエンド
+- **React 18**: モダンなWebアプリケーション
+- **Tailwind CSS**: レスポンシブデザイン
+- **Lucide Icons**: 美しいアイコンセット
+- **GitHub Pages**: 静的サイトホスティング
 
-### FRED (Federal Reserve Economic Data)
-- **提供機関**: セントルイス連邦準備銀行
-- **データ種類**: 米国の主要経済統計
-- **更新頻度**: リアルタイム〜月次
-- **API制限**: 無料版は1日1000リクエスト
+### バックエンド
+- **Python 3.11**: データ処理とAPI連携
+- **GitHub Actions**: 自動化ワークフロー
+- **GitHub Issues API**: フィードバック管理
+- **JSON**: データ交換フォーマット
 
-### 世界銀行オープンデータ
-- **提供機関**: 世界銀行
-- **データ種類**: 国際開発・経済指標
-- **更新頻度**: 年次〜四半期
-- **API制限**: 無制限（適切な使用範囲内）
+### データ処理
+- **多元的データ収集**: 複数APIからの統合データ取得
+- **AI分析**: Gemini Proによる高度な仮説生成
+- **リアルタイム更新**: 最新データに基づく動的分析
 
-### Yahoo Finance
-- **提供機関**: Yahoo
-- **データ種類**: 株価、為替、商品価格
-- **更新頻度**: リアルタイム
-- **API制限**: 非公式API、適度な使用推奨
+## 📈 期待される成果
 
-### CoinGecko
-- **提供機関**: CoinGecko
-- **データ種類**: 暗号通貨価格・市場データ
-- **更新頻度**: リアルタイム
-- **API制限**: 無料版は月50,000リクエスト
+### 研究支援
+- **創造的研究活動**: AI生成仮説による新たな研究方向の発見
+- **研究効率向上**: 仮説生成時間の大幅短縮
+- **学際的アプローチ**: 複数分野にまたがる研究アイデア
 
-## 🔒 セキュリティ
+### 品質向上
+- **ピアレビュー**: 研究者コミュニティによる評価・改善
+- **継続的改善**: フィードバックに基づく仮説生成精度向上
+- **知識共有**: 関連研究や改善提案の蓄積
 
-- APIキーはGitHub Secretsで安全に管理
-- 最小権限の原則に基づくアクセス制御
-- 定期的な依存関係の更新
-- レート制限の遵守
+### 政策支援
+- **政策立案支援**: 実証可能な政策仮説の提供
+- **影響評価**: 政策効果の事前予測と評価手法
+- **リアルタイム分析**: 最新データに基づく政策判断支援
 
-## 📝 ライセンス
+## 🤝 貢献方法
 
-MIT License
+### フィードバック投稿
+- Webサイトから直接フィードバックを投稿
+- GitHub Issuesで詳細な議論や提案
 
-## 🤝 貢献
+### 開発貢献
+- Pull Requestによる機能改善
+- バグ報告や機能要望のIssue作成
 
-プルリクエストや Issue の報告を歓迎します。特に新しいデータソースの追加や分析手法の改善についてのご提案をお待ちしています。
+### 研究協力
+- 生成された仮説の実証研究
+- 研究結果のフィードバック共有
 
 ## 📞 サポート
 
-質問や問題がある場合は、GitHub Issues でお知らせください。
+- **Issues**: https://github.com/tomoto0/economics-hypothesis-generator/issues
+- **Discussions**: GitHub Discussionsで質問・議論
+- **Documentation**: このREADMEと各スクリプトのコメント
 
 ---
 
-**Powered by Gemini AI** 🧠✨  
-**Enhanced with Multi-Source Economic Data** 📊🌐
+**最終更新**: 2024年6月19日
+**バージョン**: 2.0.0（フィードバック機能付き）
 
 
 
