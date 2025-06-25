@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Brain, TrendingUp, BarChart3, Lightbulb, Clock, RefreshCw, Search, Filter, Download, Plus, Eye, Trash2, Star, MessageSquare } from 'lucide-react'
 import FeedbackModal from './components/FeedbackModal.jsx'
 import FeedbackSummary from './components/FeedbackSummary.jsx'
+import DiscussionPanel from './components/DiscussionPanel.jsx'
 import './App.css'
 
 function App() {
@@ -31,6 +32,13 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [feedbackHypothesis, setFeedbackHypothesis] = useState(null)
+  const [showDiscussion, setShowDiscussion] = useState(false)
+  const [discussionHypothesis, setDiscussionHypothesis] = useState(null)
+
+  // バックエンドAPIのベースURL（環境に応じて変更）
+  const API_BASE_URL = process.env.NODE_ENV === 'production' 
+    ? 'https://your-backend-url.com/api' 
+    : 'http://localhost:5000/api'
 
   useEffect(() => {
     loadHypotheses()
@@ -211,6 +219,11 @@ ${feedbackData.reviewer_info || '匿名'}
     setFeedbackModalOpen(true)
   }
 
+  const openDiscussion = (hypothesis) => {
+    setDiscussionHypothesis(hypothesis)
+    setShowDiscussion(true)
+  }
+
   const filterHypotheses = () => {
     let filtered = hypotheses
 
@@ -286,6 +299,27 @@ ${feedbackData.reviewer_info || '匿名'}
 
       {/* メインコンテンツ */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ディスカッションパネル（モーダル表示） */}
+        {showDiscussion && discussionHypothesis && (
+          <Dialog open={showDiscussion} onOpenChange={setShowDiscussion}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-xl">{discussionHypothesis.title}</DialogTitle>
+                <DialogDescription>
+                  <Badge className={getConfidenceColor(discussionHypothesis.confidence)}>
+                    信頼度 {discussionHypothesis.confidence}%
+                  </Badge>
+                </DialogDescription>
+              </DialogHeader>
+              <DiscussionPanel 
+                hypothesisId={discussionHypothesis.id}
+                hypothesisData={discussionHypothesis}
+                apiBaseUrl={API_BASE_URL}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+
         {/* 統計情報 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
@@ -455,10 +489,20 @@ ${feedbackData.reviewer_info || '匿名'}
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => openFeedbackModal(hypothesis)}
-                          className="text-blue-600 hover:text-blue-800"
+                          onClick={() => openDiscussion(hypothesis)}
+                          className="text-purple-600 hover:text-purple-800"
+                          title="ディスカッション"
                         >
                           <MessageSquare className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => openFeedbackModal(hypothesis)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="フィードバック"
+                        >
+                          <Star className="h-4 w-4" />
                         </Button>
                         <Dialog>
                           <DialogTrigger asChild>
@@ -466,6 +510,7 @@ ${feedbackData.reviewer_info || '匿名'}
                               variant="ghost" 
                               size="sm"
                               onClick={() => setSelectedHypothesis(hypothesis)}
+                              title="詳細表示"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -577,14 +622,24 @@ ${feedbackData.reviewer_info || '匿名'}
                     <div className="mt-4 pt-3 border-t border-gray-100">
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span>生成日時: {formatDate(hypothesis.generated_at)}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => openFeedbackModal(hypothesis)}
-                          className="text-blue-600 hover:text-blue-800 h-auto p-1"
-                        >
-                          フィードバック
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => openDiscussion(hypothesis)}
+                            className="text-purple-600 hover:text-purple-800 h-auto p-1"
+                          >
+                            ディスカッション
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => openFeedbackModal(hypothesis)}
+                            className="text-blue-600 hover:text-blue-800 h-auto p-1"
+                          >
+                            フィードバック
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

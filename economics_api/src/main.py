@@ -6,7 +6,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from src.models.hypothesis import db
+from src.models.discussion import Discussion
 from src.routes.hypothesis import hypothesis_bp
+from src.routes.discussion import discussion_bp
+from src.routes.ai_comment import ai_comment_bp
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
@@ -15,6 +18,8 @@ app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
 CORS(app, origins="*")
 
 app.register_blueprint(hypothesis_bp, url_prefix='/api')
+app.register_blueprint(discussion_bp, url_prefix='/api')
+app.register_blueprint(ai_comment_bp, url_prefix='/api')
 
 # データベース設定
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
@@ -41,5 +46,6 @@ def serve(path):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(host='0.0.0.0', port=port, debug=True)
 
