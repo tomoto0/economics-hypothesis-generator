@@ -63,94 +63,65 @@ def get_hypothesis(hypothesis_id):
         logger.error(f"仮説取得エラー: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@hypothesis_bp.route('/hypotheses/generate', methods=['POST'])
+import google.generativeai as genai
+
+# Gemini APIキーを設定
+genai.configure(api_key="AIzaSyCD-e7WwATPRFUHMC0Z2wDfwo39F_UijY8")
+
+# モデルを初期化
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+@hypothesis_bp.route("/hypotheses/generate", methods=["POST"])
 def generate_hypotheses():
     """新しい仮説を生成"""
     try:
-        # サンプルデータ（実際の実装ではGemini APIを使用）
-        sample_hypotheses = [
-            {
-                "title": "デジタル通貨普及と消費者行動の変化",
-                "description": "中央銀行デジタル通貨（CBDC）の導入が消費者の支払い行動と貯蓄パターンに与える影響について、行動経済学の観点から分析する必要がある。",
-                "category": "金融政策",
-                "confidence": 85,
-                "research_methods": ["実験経済学", "フィールド調査", "データマイニング"],
-                "key_factors": ["プライバシー懸念", "利便性", "金融包摂"],
-                "novelty_score": 90,
-                "feasibility_score": 80
-            },
-            {
-                "title": "リモートワークと地域経済格差",
-                "description": "コロナ後のリモートワーク普及により、都市部から地方への人口移動が地域間の経済格差に与える長期的影響を分析する。",
-                "category": "労働経済学",
-                "confidence": 78,
-                "research_methods": ["パネルデータ分析", "空間経済学モデル", "質的調査"],
-                "key_factors": ["住宅価格", "インフラ整備", "教育機会"],
-                "novelty_score": 85,
-                "feasibility_score": 75
-            },
-            {
-                "title": "ESG投資と企業パフォーマンス",
-                "description": "環境・社会・ガバナンス（ESG）要因を重視した投資戦略が、長期的な企業価値と株主リターンに与える因果関係を検証する。",
-                "category": "金融経済学",
-                "confidence": 92,
-                "research_methods": ["イベントスタディ", "回帰分析", "機械学習"],
-                "key_factors": ["ESGスコア", "業界特性", "規制環境"],
-                "novelty_score": 88,
-                "feasibility_score": 90
-            },
-            {
-                "title": "AI技術導入と労働市場の構造変化",
-                "description": "人工知能技術の普及が職種別労働需要と賃金格差に与える影響を、技能偏向的技術進歩の理論を用いて分析する。",
-                "category": "労働経済学",
-                "confidence": 87,
-                "research_methods": ["差分の差分法", "機械学習", "職業分析"],
-                "key_factors": ["技能代替性", "教育水準", "産業構造"],
-                "novelty_score": 92,
-                "feasibility_score": 85
-            },
-            {
-                "title": "サステナブル消費と価格プレミアム",
-                "description": "環境配慮型商品に対する消費者の支払意思額と実際の購買行動の乖離を、行動経済学の認知バイアス理論で説明する。",
-                "category": "消費者行動",
-                "confidence": 81,
-                "research_methods": ["選択実験", "フィールド実験", "アンケート調査"],
-                "key_factors": ["環境意識", "所得水準", "社会的規範"],
-                "novelty_score": 86,
-                "feasibility_score": 88
-            }
-        ]
+        # Gemini APIを使用して仮説を生成
+        prompt = "経済学に関する新しい研究仮説を5つ生成してください。各仮説はタイトル、説明、カテゴリ、信頼度（0-100）、推奨研究手法（リスト）、重要要因（リスト）、新規性スコア（0-100）、実現可能性スコア（0-100）を含むJSON形式で出力してください。"
+        response = model.generate_content(prompt)
+        generated_text = response.text
         
+        # JSON形式にパース
+        # Gemini APIの出力が直接JSONではない場合があるため、整形を試みる
+        try:
+            # バッククォートとjsonキーワードを削除
+            if generated_text.startswith("```json") and generated_text.endswith("```"):
+                generated_text = generated_text[7:-3].strip()
+            generated_hypotheses = json.loads(generated_text)
+        except json.JSONDecodeError:
+            logger.error(f"Gemini APIからの応答がJSON形式ではありません: {generated_text}")
+            return jsonify({"success": False, "error": "Gemini APIからの応答が不正な形式です"}), 500
+
         # データベースに保存
         saved_hypotheses = []
-        for hyp_data in sample_hypotheses:
+        for hyp_data in generated_hypotheses:
             hypothesis = Hypothesis(
-                title=hyp_data['title'],
-                description=hyp_data['description'],
-                category=hyp_data['category'],
-                confidence=hyp_data['confidence'],
-                research_methods=json.dumps(hyp_data['research_methods'], ensure_ascii=False),
-                key_factors=json.dumps(hyp_data['key_factors'], ensure_ascii=False),
-                novelty_score=hyp_data['novelty_score'],
-                feasibility_score=hyp_data['feasibility_score'],
+                title=hyp_data["title"],
+                description=hyp_data["description"],
+                category=hyp_data["category"],
+                confidence=hyp_data["confidence"],
+                research_methods=json.dumps(hyp_data["research_methods"], ensure_ascii=False),
+                key_factors=json.dumps(hyp_data["key_factors"], ensure_ascii=False),
+                novelty_score=hyp_data["novelty_score"],
+                feasibility_score=hyp_data["feasibility_score"],
                 generated_at=datetime.utcnow()
             )
             db.session.add(hypothesis)
             db.session.commit()
             saved_hypotheses.append(hypothesis.to_dict())
-        
+
         logger.info(f"新しい仮説を生成しました: {len(saved_hypotheses)} 件")
-        
+
         return jsonify({
-            'success': True,
-            'data': saved_hypotheses,
-            'message': f'{len(saved_hypotheses)} 件の新しい仮説を生成しました'
+            "success": True,
+            "data": saved_hypotheses,
+            "message": f"{len(saved_hypotheses)} 件の新しい仮説を生成しました"
         })
-        
+
     except Exception as e:
         logger.error(f"仮説生成エラー: {e}")
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 @hypothesis_bp.route('/hypotheses/stats', methods=['GET'])
 def get_hypothesis_stats():
