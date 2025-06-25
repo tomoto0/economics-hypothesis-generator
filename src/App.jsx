@@ -37,8 +37,8 @@ function App() {
 
   // バックエンドAPIのベースURL（環境に応じて変更）
   const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://your-backend-url.com/api' 
-    : 'http://localhost:5000/api'
+    ? 'https://5001-ibeczr46a7f3dlqfgi1pp-41ba31da.manusvm.computer/api' 
+    : 'http://localhost:5001/api'
 
   useEffect(() => {
     loadHypotheses()
