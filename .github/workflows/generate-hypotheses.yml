@@ -33,7 +33,7 @@ on:
 jobs:
   generate-hypotheses:
     runs-on: ubuntu-latest
-    if: ${{ !github.event.inputs.update_feedback_only || github.event.inputs.update_feedback_only == 'false' }}
+    if: ${{ github.event.inputs.update_feedback_only == 'false' || github.event.inputs.update_feedback_only == '' }}
     
     permissions:
       contents: write  # リポジトリへの書き込み権限
