@@ -37,7 +37,7 @@ function App() {
 
   // バックエンドAPIのベースURL（環境に応じて変更）
   const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://5001-ibeczr46a7f3dlqfgi1pp-41ba31da.manusvm.computer/api' 
+    ? 'https://smksiymd.manus.space/api' 
     : 'http://localhost:5001/api'
 
   useEffect(() => {
