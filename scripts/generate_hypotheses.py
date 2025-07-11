@@ -77,24 +77,28 @@ class EconomicDataCollector:
                 }
                 
                 response = self.session.get(base_url, params=params, timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    if 'observations' in data and data['observations']:
-                        obs = data['observations'][0]
-                        if obs['value'] != '.':
-                            indicators.append(EconomicIndicator(
-                                name=name,
-                                value=float(obs['value']),
-                                unit=self._get_unit_for_indicator(name),
-                                date=obs['date'],
-                                source='FRED',
-                                description=f"Latest {name} data from Federal Reserve Economic Data"
-                            ))
+                response.raise_for_status() # HTTPエラーがあれば例外を発生
+                data = response.json()
+                if 'observations' in data and data['observations']:
+                    obs = data['observations'][0]
+                    if obs['value'] != '.':
+                        indicators.append(EconomicIndicator(
+                            name=name,
+                            value=float(obs['value']),
+                            unit=self._get_unit_for_indicator(name),
+                            date=obs['date'],
+                            source='FRED',
+                            description=f"Latest {name} data from Federal Reserve Economic Data"
+                        ))
                 
                 time.sleep(0.1)  # API制限対策
                 
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"FRED {name} データ取得エラー (HTTP/ネットワーク): {e}")
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"FRED {name} データ解析エラー: {e}")
             except Exception as e:
-                logger.warning(f"FRED {name} データ取得エラー: {e}")
+                logger.warning(f"FRED {name} 予期せぬエラー: {e}")
                 
         logger.info(f"FRED から {len(indicators)} 件のデータを収集")
         return indicators
@@ -126,24 +130,28 @@ class EconomicDataCollector:
                 }
                 
                 response = self.session.get(url, params=params, timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    if len(data) > 1 and data[1]:
-                        latest = data[1][0]
-                        if latest['value'] is not None:
-                            indicators.append(EconomicIndicator(
-                                name=name,
-                                value=float(latest['value']),
-                                unit=self._get_unit_for_indicator(name),
-                                date=str(latest['date']),
-                                source='World Bank',
-                                description=f"Latest {name} data from World Bank"
-                            ))
+                response.raise_for_status() # HTTPエラーがあれば例外を発生
+                data = response.json()
+                if len(data) > 1 and data[1]:
+                    latest = data[1][0]
+                    if latest['value'] is not None:
+                        indicators.append(EconomicIndicator(
+                            name=name,
+                            value=float(latest['value']),
+                            unit=self._get_unit_for_indicator(name),
+                            date=str(latest['date']),
+                            source='World Bank',
+                            description=f"Latest {name} data from World Bank"
+                        ))
                 
                 time.sleep(0.1)
                 
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"世界銀行 {name} データ取得エラー (HTTP/ネットワーク): {e}")
+            except (json.JSONDecodeError, KeyError, IndexError) as e:
+                logger.warning(f"世界銀行 {name} データ解析エラー: {e}")
             except Exception as e:
-                logger.warning(f"世界銀行 {name} データ取得エラー: {e}")
+                logger.warning(f"世界銀行 {name} 予期せぬエラー: {e}")
                 
         logger.info(f"世界銀行から {len(indicators)} 件のデータを収集")
         return indicators
@@ -177,25 +185,29 @@ class EconomicDataCollector:
                 }
                 
                 response = self.session.get(url, params=params, timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    if 'chart' in data and data['chart']['result']:
-                        result = data['chart']['result'][0]
-                        if 'meta' in result and 'regularMarketPrice' in result['meta']:
-                            price = result['meta']['regularMarketPrice']
-                            indicators.append(EconomicIndicator(
-                                name=name,
-                                value=float(price),
-                                unit=self._get_unit_for_financial_indicator(name),
-                                date=datetime.datetime.now().strftime('%Y-%m-%d'),
-                                source='Yahoo Finance',
-                                description=f"Latest {name} market data"
-                            ))
+                response.raise_for_status() # HTTPエラーがあれば例外を発生
+                data = response.json()
+                if 'chart' in data and data['chart']['result']:
+                    result = data['chart']['result'][0]
+                    if 'meta' in result and 'regularMarketPrice' in result['meta']:
+                        price = result['meta']['regularMarketPrice']
+                        indicators.append(EconomicIndicator(
+                            name=name,
+                            value=float(price),
+                            unit=self._get_unit_for_financial_indicator(name),
+                            date=datetime.datetime.now().strftime('%Y-%m-%d'),
+                            source='Yahoo Finance',
+                            description=f"Latest {name} market data"
+                        ))
                 
                 time.sleep(0.1)
                 
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"Yahoo Finance {name} データ取得エラー (HTTP/ネットワーク): {e}")
+            except (json.JSONDecodeError, KeyError, IndexError) as e:
+                logger.warning(f"Yahoo Finance {name} データ解析エラー: {e}")
             except Exception as e:
-                logger.warning(f"Yahoo Finance {name} データ取得エラー: {e}")
+                logger.warning(f"Yahoo Finance {name} 予期せぬエラー: {e}")
                 
         logger.info(f"Yahoo Finance から {len(indicators)} 件のデータを収集")
         return indicators
@@ -216,39 +228,43 @@ class EconomicDataCollector:
             }
             
             response = self.session.get(url, params=params, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                
-                crypto_names = {
-                    'bitcoin': 'Bitcoin',
-                    'ethereum': 'Ethereum',
-                    'binancecoin': 'BNB',
-                    'cardano': 'Cardano',
-                    'solana': 'Solana'
-                }
-                
-                for crypto_id, crypto_name in crypto_names.items():
-                    if crypto_id in data:
-                        crypto_data = data[crypto_id]
+            response.raise_for_status() # HTTPエラーがあれば例外を発生
+            data = response.json()
+            
+            crypto_names = {
+                'bitcoin': 'Bitcoin',
+                'ethereum': 'Ethereum',
+                'binancecoin': 'BNB',
+                'cardano': 'Cardano',
+                'solana': 'Solana'
+            }
+            
+            for crypto_id, crypto_name in crypto_names.items():
+                if crypto_id in data:
+                    crypto_data = data[crypto_id]
+                    indicators.append(EconomicIndicator(
+                        name=f"{crypto_name} Price",
+                        value=float(crypto_data['usd']),
+                        unit='USD',
+                        date=datetime.datetime.now().strftime('%Y-%m-%d'),
+                        source='CoinGecko',
+                        description=f"Latest {crypto_name} price in USD"
+                    ))
+                    
+                    if 'usd_24h_change' in crypto_data:
                         indicators.append(EconomicIndicator(
-                            name=f"{crypto_name} Price",
-                            value=float(crypto_data['usd']),
-                            unit='USD',
+                            name=f"{crypto_name} 24h Change",
+                            value=float(crypto_data['usd_24h_change']),
+                            unit='%',
                             date=datetime.datetime.now().strftime('%Y-%m-%d'),
                             source='CoinGecko',
-                            description=f"Latest {crypto_name} price in USD"
+                            description=f"{crypto_name} 24-hour price change percentage"
                         ))
-                        
-                        if 'usd_24h_change' in crypto_data:
-                            indicators.append(EconomicIndicator(
-                                name=f"{crypto_name} 24h Change",
-                                value=float(crypto_data['usd_24h_change']),
-                                unit='%',
-                                date=datetime.datetime.now().strftime('%Y-%m-%d'),
-                                source='CoinGecko',
-                                description=f"{crypto_name} 24-hour price change percentage"
-                            ))
                             
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"暗号通貨データ取得エラー (HTTP/ネットワーク): {e}")
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.warning(f"暗号通貨データ解析エラー: {e}")
         except Exception as e:
             logger.warning(f"暗号通貨データ取得エラー: {e}")
             
@@ -314,7 +330,7 @@ class EconomicDataCollector:
             'Unemployment Rate': '%',
             'Federal Funds Rate': '%',
             'Industrial Production': 'Index',
-            'Consumer Sentiment': 'Index',
+            'Consumer Sentiment': 'Thousands',
             'Housing Starts': 'Thousands',
             'Retail Sales': 'Millions USD',
             'Personal Income': 'Billions USD',
@@ -725,12 +741,16 @@ class EconomicsHypothesisGenerator:
                 self.save_results(hypotheses, economic_data, output_file)
                 logger.info(f"強化された仮説生成完了: {len(hypotheses)} 件の仮説を生成")
             else:
-                logger.warning("仮説の生成に失敗しました")
+                logger.warning("仮説の生成に失敗しました。フォールバックデータも利用できませんでした。")
+                # 仮説が生成されなかった場合でも、空のhypotheses.jsonを作成してエラーを回避
+                self.save_results([], economic_data, output_file)
             
             return hypotheses
             
         except Exception as e:
             logger.error(f"仮説生成プロセスでエラーが発生: {e}")
+            # エラー発生時も空のhypotheses.jsonを作成してエラーを回避
+            self.save_results([], {}, output_file)
             return []
 
 def main():
@@ -742,6 +762,10 @@ def main():
     
     if not gemini_api_key:
         logger.error("GEMINI_API_KEY環境変数が設定されていません")
+        # APIキーがない場合でも、空のhypotheses.jsonを作成してエラーを回避
+        generator = EconomicsHypothesisGenerator('dummy_key') # ダミーキーで初期化
+        generator.save_results([], {}, "hypotheses.json")
+        print("❌ GEMINI_API_KEYが設定されていないため、仮説生成をスキップしました。空のhypotheses.jsonを作成しました。")
         return
     
     # 強化された仮説生成器を初期化
@@ -758,8 +782,10 @@ def main():
             print(f"   期待インパクト: {hypothesis.get('expected_impact', 'N/A')}")
             print()
     else:
-        print("❌ 仮説の生成に失敗しました")
+        print("❌ 仮説の生成に失敗しました。詳細はログを確認してください。")
 
 if __name__ == "__main__":
     main()
+
+
 
