@@ -119,12 +119,17 @@ jobs:
     - name: ビルド成果物をアーティファクトとして準備
       run: |
         # GitHub Pagesデプロイ用のアーティファクトを作成
-        tar -czf github-pages.tar.gz -C dist . --exclude="economics_api/venv"
+        tar -czf github-pages.tar.gz -C dist .
     
     - name: GitHub Pagesアーティファクトのアップロード
       uses: actions/upload-pages-artifact@v2
       with:
         path: dist
+        # .gitignoreファイルを明示的に除外
+        # upload-pages-artifactはデフォルトで隠しファイルを除外するため、
+        # .gitignoreがdistに含まれていないことを確認する
+        # もしdistに.gitignoreが含まれていてエラーになる場合は、
+        # .gitignoreをdistから削除するか、tarコマンドで除外する
     
     - name: 変更をコミット・プッシュ
       run: |
@@ -302,6 +307,8 @@ jobs:
             issue_number: issueNumber,
             labels: ['feedback', 'processed']
           });
+
+
 
 
 
