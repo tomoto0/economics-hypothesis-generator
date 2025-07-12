@@ -119,14 +119,12 @@ jobs:
     - name: ビルド成果物をアーティファクトとして準備
       run: |
         # GitHub Pagesデプロイ用のアーティファクトを作成
-        tar -czf github-pages.tar.gz -C dist .
+        tar -czf github-pages.tar.gz -C dist . --exclude="economics_api/venv"
     
     - name: GitHub Pagesアーティファクトのアップロード
       uses: actions/upload-pages-artifact@v2
       with:
-        path: |
-          dist
-          !economics_api/venv/
+        path: dist
     
     - name: 変更をコミット・プッシュ
       run: |
