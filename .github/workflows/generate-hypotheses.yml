@@ -125,6 +125,9 @@ jobs:
       uses: actions/upload-pages-artifact@v2
       with:
         path: dist
+        # venvディレクトリを除外
+        exclude: |
+          economics_api/venv/
     
     - name: 変更をコミット・プッシュ
       run: |
@@ -302,6 +305,8 @@ jobs:
             issue_number: issueNumber,
             labels: ['feedback', 'processed']
           });
+
+
 
 
 
