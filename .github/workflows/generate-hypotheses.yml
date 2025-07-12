@@ -117,13 +117,11 @@ jobs:
         ls -la dist/
     
     - name: GitHub Pagesアーティファクトのアップロード
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-artifact@v4 # actions/upload-pages-artifact@v2 から変更
       with:
-        path: dist
-        # .gitignoreはアップロード対象外だが、念のため除外指定
-        # .gitignoreはリポジトリのルートにあるため、distディレクトリには含まれない
-        # しかし、actions/upload-pages-artifact@v2が内部で何か処理をしている可能性を考慮
-        # exclude: '.gitignore' # このオプションは存在しないためコメントアウト
+        name: pages-artifact # アーティファクト名を指定
+        path: dist/ # distディレクトリをアップロード
+        retention-days: 1 # アーティファクトの保持期間（任意）
     
     - name: 変更をコミット・プッシュ
       run: |
@@ -225,9 +223,11 @@ jobs:
         echo "🏗️ フィードバック更新ビルド完了"
     
     - name: GitHub Pagesアーティファクトのアップロード
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-artifact@v4 # actions/upload-pages-artifact@v2 から変更
       with:
-        path: dist
+        name: pages-artifact # アーティファクト名を指定
+        path: dist/ # distディレクトリをアップロード
+        retention-days: 1 # アーティファクトの保持期間（任意）
     
     - name: 変更をコミット・プッシュ
       run: |
@@ -259,9 +259,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
+    - name: アーティファクトのダウンロード
+      uses: actions/download-artifact@v4 # 追加
+      with:
+        name: pages-artifact # 追加
+        path: ./artifact # 追加
+    
     - name: GitHub Pagesへのデプロイ
       id: deployment
       uses: actions/deploy-pages@v2
+      with:
+        path: ./artifact # 変更
 
   # フィードバック通知ジョブ
   notify-feedback:
@@ -301,6 +309,10 @@ jobs:
             issue_number: issueNumber,
             labels: ['feedback', 'processed']
           });
+
+
+
+
 
 
 
