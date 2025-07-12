@@ -123,7 +123,7 @@ jobs:
         # .gitignoreはアップロード対象外だが、念のため除外指定
         # .gitignoreはリポジトリのルートにあるため、distディレクトリには含まれない
         # しかし、actions/upload-pages-artifact@v2が内部で何か処理をしている可能性を考慮
-        # exclude: '.gitignore'
+        # exclude: '.gitignore' # このオプションは存在しないためコメントアウト
     
     - name: 変更をコミット・プッシュ
       run: |
@@ -301,6 +301,8 @@ jobs:
             issue_number: issueNumber,
             labels: ['feedback', 'processed']
           });
+
+
 
 
 
