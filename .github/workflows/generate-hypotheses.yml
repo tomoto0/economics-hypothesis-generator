@@ -115,6 +115,11 @@ jobs:
         npm run build
         echo "🏗️ ビルド完了"
         ls -la dist/
+        # .gitignoreをdistディレクトリから削除
+        if [ -f "dist/.gitignore" ]; then
+          rm dist/.gitignore
+          echo "🗑️ dist/.gitignoreを削除しました"
+        fi
     
     - name: GitHub Pagesアーティファクトのアップロード
       uses: actions/upload-artifact@v4 # actions/upload-pages-artifact@v2 から変更
@@ -221,6 +226,11 @@ jobs:
       run: |
         npm run build
         echo "🏗️ フィードバック更新ビルド完了"
+        # .gitignoreをdistディレクトリから削除
+        if [ -f "dist/.gitignore" ]; then
+          rm dist/.gitignore
+          echo "🗑️ dist/.gitignoreを削除しました"
+        fi
     
     - name: GitHub Pagesアーティファクトのアップロード
       uses: actions/upload-artifact@v4 # actions/upload-pages-artifact@v2 から変更
