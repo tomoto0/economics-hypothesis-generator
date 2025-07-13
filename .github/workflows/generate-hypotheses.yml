@@ -116,10 +116,11 @@ jobs:
         echo "🏗️ ビルド完了"
         ls -la dist/
         # .gitignoreをdistディレクトリから削除
-        if [ -f "dist/.gitignore" ]; then
-          rm dist/.gitignore
-          echo "🗑️ dist/.gitignoreを削除しました"
-        fi
+        # actions/upload-artifact@v4 はデフォルトで隠しファイルを無視するため、明示的に削除する必要はない
+        # if [ -f "dist/.gitignore" ]; then
+        #   rm dist/.gitignore
+        #   echo "🗑️ dist/.gitignoreを削除しました"
+        # fi
     
     - name: GitHub Pagesアーティファクトのアップロード
       uses: actions/upload-artifact@v4 # actions/upload-pages-artifact@v2 から変更
@@ -127,6 +128,11 @@ jobs:
         name: pages-artifact # アーティファクト名を指定
         path: dist/ # distディレクトリをアップロード
         retention-days: 1 # アーティファクトの保持期間（任意）
+        # .gitignoreファイルが問題を引き起こす場合、明示的に除外する
+        # .gitignoreは通常、リポジトリのルートにあり、distディレクトリには含まれないはずだが、
+        # もしビルドプロセスでdistにコピーされるなら、ここで除外する必要がある。
+        # 現在のエラーはルートの.gitignoreを指しているように見えるため、pathをdist/に限定する
+        # exclude: .gitignore # このオプションはupload-artifact@v4には存在しない
     
     - name: 変更をコミット・プッシュ
       run: |
@@ -227,10 +233,11 @@ jobs:
         npm run build
         echo "🏗️ フィードバック更新ビルド完了"
         # .gitignoreをdistディレクトリから削除
-        if [ -f "dist/.gitignore" ]; then
-          rm dist/.gitignore
-          echo "🗑️ dist/.gitignoreを削除しました"
-        fi
+        # actions/upload-artifact@v4 はデフォルトで隠しファイルを無視するため、明示的に削除する必要はない
+        # if [ -f "dist/.gitignore" ]; then
+        #   rm dist/.gitignore
+        #   echo "🗑️ dist/.gitignoreを削除しました"
+        # fi
     
     - name: GitHub Pagesアーティファクトのアップロード
       uses: actions/upload-artifact@v4 # actions/upload-pages-artifact@v2 から変更
@@ -238,6 +245,8 @@ jobs:
         name: pages-artifact # アーティファクト名を指定
         path: dist/ # distディレクトリをアップロード
         retention-days: 1 # アーティファクトの保持期間（任意）
+        # .gitignoreファイルが問題を引き起こす場合、明示的に除外する
+        # exclude: .gitignore # このオプションはupload-artifact@v4には存在しない
     
     - name: 変更をコミット・プッシュ
       run: |
@@ -319,6 +328,8 @@ jobs:
             issue_number: issueNumber,
             labels: ['feedback', 'processed']
           });
+
+
 
 
 
