@@ -108,7 +108,7 @@ jobs:
         cache: 'npm'
     
     - name: フロントエンド依存関係のインストール
-      run: npm ci
+      run: pnpm install
     
     - name: Reactアプリケーションのビルド
       run: |
@@ -226,7 +226,7 @@ jobs:
         cache: 'npm'
     
     - name: フロントエンド依存関係のインストール
-      run: npm ci
+      run: pnpm install
     
     - name: Reactアプリケーションのビルド
       run: |
@@ -246,6 +246,9 @@ jobs:
         path: dist/ # distディレクトリをアップロード
         retention-days: 1 # アーティファクトの保持期間（任意）
         # .gitignoreファイルが問題を引き起こす場合、明示的に除外する
+        # .gitignoreは通常、リポジトリのルートにあり、distディレクトリには含まれないはずだが、
+        # もしビルドプロセスでdistにコピーされるなら、ここで除外する必要がある。
+        # 現在のエラーはルートの.gitignoreを指しているように見えるため、pathをdist/に限定する
         # exclude: .gitignore # このオプションはupload-artifact@v4には存在しない
     
     - name: 変更をコミット・プッシュ
@@ -328,22 +331,5 @@ jobs:
             issue_number: issueNumber,
             labels: ['feedback', 'processed']
           });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
