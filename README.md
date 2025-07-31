@@ -16,7 +16,7 @@ LLMによる経済学の仮説生成・研究アイデア創出を実現する�
 - **研究者情報**: 任意で所属機関や専門分野を記録
 
 ### 🔄 自動化システム
-- **定期実行**: 毎日午前9時（JST）に仮説生成とフィードバック更新
+- **定期実行**: 毎日午後10時（JST）に仮説生成とフィードバック更新
 - **Issue連携**: フィードバックIssue作成時の自動処理
 - **手動トリガー**: GitHub UIから任意のタイミングで実行可能
 - **継続的デプロイ**: 生成結果とフィードバックを自動的にWebサイトに反映
@@ -49,7 +49,7 @@ economics-hypothesis-generator/
 │   ├── generate_hypotheses.py  # 多元的データ収集・分析スクリプト
 │   └── requirements.txt   # Python依存関係
 ├── .github/workflows/     # GitHub Actions設定
-│   └── generate-hypotheses.yml
+│   └── main.yml           # メインワークフローファイル (旧 generate-hypotheses.yml と jekyll-gh-pages.yml を統合)
 ├── public/data/          # 生成データ保存場所
 │   ├── hypotheses.json   # 生成された仮説データ
 │   └── metadata.json     # メタデータ
@@ -100,7 +100,7 @@ GitHub リポジトリの Settings > Secrets and variables > Actions で以下�
 3. 保存
 
 ### 4. 初回実行
-- Actions タブから "経済学仮説生成システム" ワークフローを手動実行
+- Actions タブから "Deploy to GitHub Pages" ワークフローを手動実行
 - または、mainブランチにプッシュして自動実行
 
 ## 📊 生成される仮説の例（強化版）
@@ -124,11 +124,11 @@ GitHub リポジトリの Settings > Secrets and variables > Actions で以下�
 ## 📈 使用方法
 
 ### 自動実行
-システムは毎日午前9時（JST）に自動的に実行され、最新の経済仮説を生成します。
+システムは毎日午後10時（JST）に自動的に実行され、最新の経済仮説を生成し、Webサイトを更新します。
 
 ### 手動実行
 1. GitHubリポジトリのActionsタブを開く
-2. "経済学仮説生成システム" ワークフローを選択
+2. "Deploy to GitHub Pages" ワークフローを選択
 3. "Run workflow" ボタンをクリック
 4. 必要に応じて強制更新フラグを設定して実行
 
@@ -244,7 +244,7 @@ GITHUB_TOKEN=your_github_token  # フィードバック機能用
 
 ---
 
-**最終更新**: 2024年6月19日
+**最終更新**: 2024年7月31日
 **バージョン**: 2.0.0（フィードバック機能付き）
 
 
