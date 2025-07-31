@@ -101,11 +101,16 @@ jobs:
         echo "📁 ファイル配置完了"
         ls -la public/data/
     
+    - name: pnpmのインストール
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+    
     - name: Node.js環境のセットアップ
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
+        cache: 'pnpm'
     
     - name: フロントエンド依存関係のインストール
       run: pnpm install
@@ -219,11 +224,16 @@ jobs:
         # メタデータを更新
         echo "{\"last_updated\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"feedback_only_update\": true}" > public/data/feedback_metadata.json
     
+    - name: pnpmのインストール
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+    
     - name: Node.js環境のセットアップ
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
+        cache: 'pnpm'
     
     - name: フロントエンド依存関係のインストール
       run: pnpm install
