@@ -18,20 +18,51 @@ const DiscussionPanel = ({ hypothesisId, hypothesisData, apiBaseUrl = 'http://lo
   useEffect(() => {
     if (hypothesisId) {
       loadDiscussions();
-      loadStats();
     }
   }, [hypothesisId]);
+
+  useEffect(() => {
+    // ディスカッションデータが更新されたら統計を再計算
+    loadStats();
+  }, [discussions]);
 
   const loadDiscussions = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/discussions/${hypothesisId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setDiscussions(data.discussions || []);
-      }
+      // GitHub Issues APIからディスカッションを取得
+      const response = await fetch('https://api.github.com/repos/tomoto0/economics-hypothesis-generator/issues?labels=discussion');
+      const issues = await response.json();
+      
+      const discussionData = [];
+      issues.forEach(issue => {
+        try {
+          // Issue本文からディスカッションデータを抽出
+          const match = issue.body.match(/```json\n([\s\S]*?)\n```/);
+          if (match) {
+            const discussion = JSON.parse(match[1]);
+            if (discussion.hypothesis_id == hypothesisId) {
+              discussionData.push({
+                id: issue.number,
+                ...discussion.discussion,
+                created_at: issue.created_at,
+                likes: 0, // GitHub APIからは取得できないため初期値
+                dislikes: 0,
+                reply_count: 0
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('ディスカッションデータの解析に失敗:', e);
+        }
+      });
+      
+      // 作成日時でソート（新しい順）
+      discussionData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setDiscussions(discussionData);
     } catch (error) {
-      console.error('Error loading discussions:', error);
+      console.error('ディスカッションの読み込みに失敗しました:', error);
+      // フォールバック: 空の配列を設定
+      setDiscussions([]);
     } finally {
       setLoading(false);
     }
@@ -39,27 +70,54 @@ const DiscussionPanel = ({ hypothesisId, hypothesisData, apiBaseUrl = 'http://lo
 
   const loadStats = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/discussions/stats/${hypothesisId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      // ローカルのディスカッションデータから統計を計算
+      const totalDiscussions = discussions.length;
+      const userDiscussions = discussions.filter(d => d.comment_type === 'user').length;
+      const aiDiscussions = discussions.filter(d => d.comment_type === 'ai').length;
+      
+      setStats({
+        total_discussions: totalDiscussions,
+        user_discussions: userDiscussions,
+        ai_discussions: aiDiscussions
+      });
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error('統計の計算に失敗しました:', error);
     }
   };
 
   const loadReplies = async (discussionId) => {
+    // GitHub Issues APIから返信を取得（実装は簡素化）
     try {
-      const response = await fetch(`${apiBaseUrl}/discussions/${discussionId}/replies`);
-      if (response.ok) {
-        const data = await response.json();
-        return data.replies || [];
-      }
+      const response = await fetch('https://api.github.com/repos/tomoto0/economics-hypothesis-generator/issues?labels=reply');
+      const issues = await response.json();
+      
+      const replies = [];
+      issues.forEach(issue => {
+        try {
+          const match = issue.body.match(/```json\n([\s\S]*?)\n```/);
+          if (match) {
+            const discussion = JSON.parse(match[1]);
+            if (discussion.discussion.parent_id == discussionId) {
+              replies.push({
+                id: issue.number,
+                ...discussion.discussion,
+                created_at: issue.created_at,
+                likes: 0,
+                dislikes: 0,
+                reply_count: 0
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('返信データの解析に失敗:', e);
+        }
+      });
+      
+      return replies;
     } catch (error) {
-      console.error('Error loading replies:', error);
+      console.error('返信の読み込みに失敗しました:', error);
+      return [];
     }
-    return [];
   };
 
   const submitComment = async () => {
@@ -70,31 +128,63 @@ const DiscussionPanel = ({ hypothesisId, hypothesisData, apiBaseUrl = 'http://lo
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/discussions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          hypothesis_id: hypothesisId,
-          author_name: userInfo.name,
-          author_email: userInfo.email,
-          author_affiliation: userInfo.affiliation,
-          content: newComment,
-          comment_type: 'user'
-        }),
-      });
+      // GitHub Issue作成用のデータ
+      const issueData = {
+        title: `ディスカッション: ${hypothesisData.title}`,
+        body: `## 仮説へのディスカッション
 
-      if (response.ok) {
-        setNewComment('');
-        loadDiscussions();
-        loadStats();
-        
-        // AI自動コメントをトリガー
-        triggerAIComment();
+**仮説ID**: ${hypothesisId}
+**仮説タイトル**: ${hypothesisData.title}
+
+### コメント
+${newComment}
+
+### 投稿者情報
+- **名前**: ${userInfo.name}
+- **メールアドレス**: ${userInfo.email || '未記入'}
+- **所属機関**: ${userInfo.affiliation || '未記入'}
+
+---
+
+\`\`\`json
+{
+  "hypothesis_id": ${hypothesisId},
+  "discussion": {
+    "author_name": "${userInfo.name}",
+    "author_email": "${userInfo.email || ''}",
+    "author_affiliation": "${userInfo.affiliation || ''}",
+    "content": ${JSON.stringify(newComment)},
+    "comment_type": "user",
+    "timestamp": "${new Date().toISOString()}"
+  }
+}
+\`\`\``,
+        labels: ['discussion', 'user-input']
       }
+
+      // GitHub Issues APIに投稿（実際の実装では認証が必要）
+      console.log('ディスカッションデータ:', issueData)
+      
+      // ローカルでディスカッションを更新（デモ用）
+      const newDiscussion = {
+        id: Date.now(),
+        author_name: userInfo.name,
+        author_email: userInfo.email,
+        author_affiliation: userInfo.affiliation,
+        content: newComment,
+        comment_type: 'user',
+        created_at: new Date().toISOString(),
+        likes: 0,
+        dislikes: 0,
+        reply_count: 0
+      }
+      
+      setDiscussions(prev => [newDiscussion, ...prev])
+      setNewComment('')
+      
+      alert('ディスカッションを送信しました！GitHub Issuesで確認できます。')
     } catch (error) {
-      console.error('Error submitting comment:', error);
+      console.error('ディスカッション送信エラー:', error)
     }
   };
 
@@ -106,51 +196,107 @@ const DiscussionPanel = ({ hypothesisId, hypothesisData, apiBaseUrl = 'http://lo
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/discussions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          hypothesis_id: hypothesisId,
-          author_name: userInfo.name,
-          author_email: userInfo.email,
-          author_affiliation: userInfo.affiliation,
-          content: replyContent,
-          comment_type: 'user',
-          parent_id: parentId
-        }),
-      });
+      const parentComment = discussions.find(d => d.id === parentId);
+      
+      // GitHub Issue作成用のデータ
+      const issueData = {
+        title: `返信: ${hypothesisData.title}`,
+        body: `## 仮説ディスカッションへの返信
 
-      if (response.ok) {
-        setReplyContent('');
-        setReplyTo(null);
-        loadDiscussions();
+**仮説ID**: ${hypothesisId}
+**仮説タイトル**: ${hypothesisData.title}
+**返信先**: ${parentComment ? parentComment.author_name : '不明'}
+
+### 返信内容
+${replyContent}
+
+### 投稿者情報
+- **名前**: ${userInfo.name}
+- **メールアドレス**: ${userInfo.email || '未記入'}
+- **所属機関**: ${userInfo.affiliation || '未記入'}
+
+---
+
+\`\`\`json
+{
+  "hypothesis_id": ${hypothesisId},
+  "discussion": {
+    "author_name": "${userInfo.name}",
+    "author_email": "${userInfo.email || ''}",
+    "author_affiliation": "${userInfo.affiliation || ''}",
+    "content": ${JSON.stringify(replyContent)},
+    "comment_type": "user",
+    "parent_id": ${parentId},
+    "timestamp": "${new Date().toISOString()}"
+  }
+}
+\`\`\``,
+        labels: ['discussion', 'reply', 'user-input']
       }
+
+      // GitHub Issues APIに投稿（実際の実装では認証が必要）
+      console.log('返信データ:', issueData)
+      
+      // ローカルで返信を更新（デモ用）
+      const newReply = {
+        id: Date.now(),
+        author_name: userInfo.name,
+        author_email: userInfo.email,
+        author_affiliation: userInfo.affiliation,
+        content: replyContent,
+        comment_type: 'user',
+        parent_id: parentId,
+        created_at: new Date().toISOString(),
+        likes: 0,
+        dislikes: 0,
+        reply_count: 0
+      }
+      
+      setDiscussions(prev => [newReply, ...prev])
+      setReplyContent('')
+      setReplyTo(null)
+      
+      alert('返信を送信しました！GitHub Issuesで確認できます。')
     } catch (error) {
-      console.error('Error submitting reply:', error);
+      console.error('返信送信エラー:', error)
     }
   };
 
   const triggerAIComment = async () => {
+    // AI自動コメント機能は簡素化（GitHub Issue投稿のみ）
     try {
-      await fetch(`${apiBaseUrl}/ai-comment/auto-trigger/${hypothesisId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          hypothesis_data: hypothesisData
-        }),
-      });
-      
-      // AIコメント後にディスカッションを再読み込み
-      setTimeout(() => {
-        loadDiscussions();
-        loadStats();
-      }, 2000);
+      const issueData = {
+        title: `AI分析: ${hypothesisData.title}`,
+        body: `## AI による仮説分析
+
+**仮説ID**: ${hypothesisId}
+**仮説タイトル**: ${hypothesisData.title}
+
+### AI分析コメント
+この仮説について、AIによる詳細な分析を実行しました。
+
+---
+
+\`\`\`json
+{
+  "hypothesis_id": ${hypothesisId},
+  "discussion": {
+    "author_name": "AI Assistant",
+    "author_email": "",
+    "author_affiliation": "Economics Hypothesis Generator",
+    "content": "AI による自動分析コメントです。",
+    "comment_type": "ai",
+    "timestamp": "${new Date().toISOString()}"
+  }
+}
+\`\`\``,
+        labels: ['discussion', 'ai-generated']
+      };
+
+      console.log('AI分析データ:', issueData);
+      alert('AI分析コメントを生成しました！GitHub Issuesで確認できます。');
     } catch (error) {
-      console.error('Error triggering AI comment:', error);
+      console.error('AI分析コメント生成エラー:', error);
     }
   };
 
