@@ -4,6 +4,8 @@ on:
   push:
     branches: [ master ]
   workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *' # JST 22:00 (UTC 13:00)
 
 jobs:
   build-and-deploy:
