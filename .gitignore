@@ -59,3 +59,6 @@ public/data/metadata.json
 scripts/hypotheses.json
 scripts/hypothesis_generator.log
 
+
+economics_api/venv/
+
