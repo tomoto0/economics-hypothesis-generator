@@ -150,7 +150,7 @@ GitHub リポジトリの Settings > Secrets and variables > Actions で以下�
 - **Economic Calendar**: 経済イベント・発表予定
 
 ### AI分析
-- **Gemini Pro**: 高度な仮説生成と分析
+- **Gemini 2.5 Flash**: 高度な仮説生成と分析
 - **多元的データ統合**: 複数ソースからの包括的分析
 - **リアルタイム処理**: 最新データに基づく動的分析
 

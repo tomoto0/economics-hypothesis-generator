@@ -15,7 +15,7 @@ class GeminiAICommentator:
     
     def __init__(self, api_key: str = None):
         self.api_key = api_key or os.getenv('GEMINI_API_KEY')
-        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
+        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
         
         if not self.api_key:
             logger.warning("Gemini API key not found. AI comments will be disabled.")
@@ -220,7 +220,7 @@ class AICommentService:
                     author_affiliation="AI Research Assistant",
                     content=ai_comment,
                     comment_type='ai',
-                    ai_model='gemini-2.0-flash-exp'
+                    ai_model='gemini-2.5-flash'
                 )
                 
                 db.session.add(discussion)
@@ -266,7 +266,7 @@ class AICommentService:
                     author_affiliation="AI Research Assistant",
                     content=ai_reply,
                     comment_type='ai',
-                    ai_model='gemini-2.0-flash-exp',
+                    ai_model='gemini-2.5-flash',
                     parent_id=comment_id
                 )
                 
