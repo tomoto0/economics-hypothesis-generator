@@ -53,7 +53,7 @@ function App() {
     setIsLoading(true)
     try {
       // GitHub Pages環境では、静的JSONファイルから読み込み
-      const response = await fetch('./data/hypotheses.json')
+      const response = await fetch('/economics-hypothesis-generator/data/hypotheses.json')
       const data = await response.json()
       
       if (data.hypotheses) {
@@ -267,28 +267,41 @@ ${feedbackData.reviewer_info || '匿名'}
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* ヘッダー */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b sticky top-0 z-50">
+      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-indigo-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
-                <Brain className="h-8 w-8 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="p-3 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl shadow-lg">
+                  <Brain className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   経済学仮説生成システム
                 </h1>
-                <p className="text-sm text-gray-600">AI駆動による研究アイデア創出プラットフォーム</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  <span className="inline-flex items-center">
+                    <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                    AI駆動による革新的研究アイデア創出プラットフォーム
+                  </span>
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               {lastUpdated && (
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="h-4 w-4 mr-1" />
+                <div className="flex items-center text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+                  <Clock className="h-4 w-4 mr-2" />
                   最終更新: {lastUpdated.toLocaleString('ja-JP')}
                 </div>
               )}
-              <Button onClick={loadHypotheses} disabled={isLoading} variant="outline">
+              <Button 
+                onClick={loadHypotheses} 
+                disabled={isLoading} 
+                variant="outline"
+                className="bg-white/80 hover:bg-indigo-50 border-indigo-200 text-indigo-700 hover:text-indigo-800 transition-all duration-200"
+              >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 更新
               </Button>
@@ -322,70 +335,99 @@ ${feedbackData.reviewer_info || '匿名'}
 
         {/* 統計情報 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <Card className="bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border-blue-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-blue-800">生成された仮説</CardTitle>
-              <Lightbulb className="h-4 w-4 text-blue-600" />
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <Lightbulb className="h-5 w-5 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-900">{stats.totalHypotheses}</div>
-              <p className="text-xs text-blue-700">総数</p>
+              <div className="text-3xl font-bold text-blue-900 mb-1">{stats.totalHypotheses}</div>
+              <p className="text-xs text-blue-700 flex items-center">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                総数
+              </p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <Card className="bg-gradient-to-br from-green-50 via-green-100 to-green-200 border-green-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-green-800">平均信頼度</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
+              <div className="p-2 bg-green-500 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-900">{stats.averageConfidence}%</div>
-              <p className="text-xs text-green-700">AI分析による評価</p>
+              <div className="text-3xl font-bold text-green-900 mb-1">{stats.averageConfidence}%</div>
+              <p className="text-xs text-green-700 flex items-center">
+                <Brain className="h-3 w-3 mr-1" />
+                AI分析による評価
+              </p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <Card className="bg-gradient-to-br from-purple-50 via-purple-100 to-purple-200 border-purple-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-purple-800">研究分野</CardTitle>
-              <BarChart3 className="h-4 w-4 text-purple-600" />
+              <div className="p-2 bg-purple-500 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-900">{stats.categoriesCount}</div>
-              <p className="text-xs text-purple-700">カバーされた領域</p>
+              <div className="text-3xl font-bold text-purple-900 mb-1">{stats.categoriesCount}</div>
+              <p className="text-xs text-purple-700 flex items-center">
+                <Filter className="h-3 w-3 mr-1" />
+                カバーされた領域
+              </p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <Card className="bg-gradient-to-br from-orange-50 via-orange-100 to-orange-200 border-orange-300 hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-orange-800">フィルタ結果</CardTitle>
-              <Filter className="h-4 w-4 text-orange-600" />
+              <div className="p-2 bg-orange-500 rounded-lg">
+                <Search className="h-5 w-5 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-900">{filteredHypotheses.length}</div>
-              <p className="text-xs text-orange-700">表示中の仮説</p>
+              <div className="text-3xl font-bold text-orange-900 mb-1">{filteredHypotheses.length}</div>
+              <p className="text-xs text-orange-700 flex items-center">
+                <Eye className="h-3 w-3 mr-1" />
+                表示中の仮説
+              </p>
             </CardContent>
           </Card>
         </div>
 
         {/* フィルタリング */}
-        <Card className="mb-8 bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Search className="h-5 w-5 mr-2" />
+        <Card className="mb-8 bg-white/80 backdrop-blur-md shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-lg">
+            <CardTitle className="flex items-center text-lg">
+              <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg mr-3">
+                <Search className="h-5 w-5 text-white" />
+              </div>
               検索・フィルタ
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">キーワード検索</label>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center">
+                  <Search className="h-4 w-4 mr-2 text-indigo-500" />
+                  キーワード検索
+                </label>
                 <Input
                   placeholder="タイトルや説明で検索..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-indigo-200 focus:border-indigo-400 focus:ring-indigo-400"
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">カテゴリ</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2 text-purple-500" />
+                  カテゴリ
+                </label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-purple-200 focus:border-purple-400">
                     <SelectValue placeholder="カテゴリを選択" />
                   </SelectTrigger>
                   <SelectContent>
@@ -396,10 +438,13 @@ ${feedbackData.reviewer_info || '匿名'}
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">最小信頼度</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center">
+                  <TrendingUp className="h-4 w-4 mr-2 text-green-500" />
+                  最小信頼度
+                </label>
                 <Select value={minConfidence.toString()} onValueChange={(value) => setMinConfidence(parseInt(value))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-green-200 focus:border-green-400">
                     <SelectValue placeholder="信頼度を選択" />
                   </SelectTrigger>
                   <SelectContent>
@@ -418,8 +463,9 @@ ${feedbackData.reviewer_info || '匿名'}
                     setMinConfidence(0)
                   }}
                   variant="outline"
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-gray-300 text-gray-700 transition-all duration-200"
                 >
+                  <RefreshCw className="h-4 w-4 mr-2" />
                   リセット
                 </Button>
               </div>
