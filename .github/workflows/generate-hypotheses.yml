@@ -106,15 +106,15 @@ jobs:
       with:
         run_install: false
     
-    - name: Node.js環境のセットアップ
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'pnpm'
-        cache-dependency-path: pnpm-lock.yaml
+      - name: Node.js環境のセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
     
     - name: フロントエンド依存関係のインストール
-      run: pnpm install
+      run: npm ci
     
     - name: Reactアプリケーションのビルド
       run: |
@@ -230,15 +230,15 @@ jobs:
       with:
         run_install: false
     
-    - name: Node.js環境のセットアップ
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'pnpm'
-        cache-dependency-path: pnpm-lock.yaml
+      - name: Node.js環境のセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
     
     - name: フロントエンド依存関係のインストール
-      run: pnpm install
+      run: npm ci
     
     - name: Reactアプリケーションのビルド
       run: |
@@ -301,7 +301,7 @@ jobs:
     
     - name: GitHub Pagesへのデプロイ
       id: deployment
-      uses: actions/deploy-pages@v2
+      uses: actions/deploy-pages@v4
       with:
         path: ./artifact # 変更
 
