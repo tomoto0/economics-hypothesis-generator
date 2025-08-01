@@ -271,10 +271,10 @@ ${replyContent}
 
   const triggerAIComment = async () => {
     try {
-      // Gemini APIキーの確認
-      const apiKey = process.env.REACT_APP_GEMINI_API_KEY || prompt('Gemini APIキーを入力してください:');
+      // Gemini APIキーの確認（環境変数から取得、なければプロンプト表示）
+      const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
       if (!apiKey) {
-        alert('Gemini APIキーが必要です。');
+        alert('Gemini APIキーが設定されていません。GitHub SecretsにGEMINI_API_KEYを設定してください。');
         return;
       }
 
