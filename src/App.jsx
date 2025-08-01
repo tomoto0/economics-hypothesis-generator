@@ -35,10 +35,7 @@ function App() {
   const [showDiscussion, setShowDiscussion] = useState(false)
   const [discussionHypothesis, setDiscussionHypothesis] = useState(null)
 
-  // バックエンドAPIのベースURL（環境に応じて変更）
-  const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://smksiymd.manus.space/api' 
-    : 'http://localhost:5001/api'
+  // GitHub Pagesで独立動作するため、バックエンドAPIは使用しない
 
   useEffect(() => {
     loadHypotheses()
@@ -327,7 +324,6 @@ ${feedbackData.reviewer_info || '匿名'}
               <DiscussionPanel 
                 hypothesisId={discussionHypothesis.id}
                 hypothesisData={discussionHypothesis}
-                apiBaseUrl={API_BASE_URL}
               />
             </DialogContent>
           </Dialog>
