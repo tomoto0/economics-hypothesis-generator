@@ -1,4 +1,4 @@
-# 経済学仮説生成システム - 強化版
+# 経済学仮説生成システム - 改良版
 
 ## はじめに
 
@@ -6,7 +6,20 @@
 
 LLMによる経済学の仮説生成・研究アイデア創出を実現するシステムです。GitHub ActionsでGemini APIによる分析を定期実行し、**幅広いデータソースから収集した最新の経済動向**に基づいた革新的な研究仮説を自動生成します。
 
-## 🆕 新機能: フィードバック・評価システム
+## 🆕 最新の改良点（2025年8月版）
+
+### 🔧 技術的改善
+- **CORSエラーの解決**: 外部バックエンドAPIへの依存を削除し、GitHub Pagesで完全に独立動作
+- **GitHub Issues連携の強化**: ディスカッション機能をGitHub Issues APIベースに完全移行
+- **Gemini API直接統合**: gemini-2.5-flashモデルを使用したAI分析コメント生成機能を実装
+- **セキュリティ向上**: GitHub Secretsを使用したAPIキー管理
+
+### 🚀 新機能
+- **AI分析コメント**: Gemini 2.5 Flashによる仮説の専門的分析
+- **改良されたディスカッション**: GitHub Issuesと連携した議論プラットフォーム
+- **独立動作**: 外部サーバーに依存しないフルスタティック構成
+
+## 🆕 フィードバック・評価システム
 
 ### ✨ 主要機能
 - **5段階評価システム**: 妥当性、実現可能性、新規性、政策的重要性、総合評価
@@ -14,6 +27,7 @@ LLMによる経済学の仮説生成・研究アイデア創出を実現する�
 - **GitHub Issue連携**: フィードバックは自動的にGitHub Issueとして投稿
 - **リアルタイム集計**: フィードバック統計の自動更新・表示
 - **研究者情報**: 任意で所属機関や専門分野を記録
+- **AI分析コメント**: Gemini 2.5 Flashによる専門的な仮説分析
 
 ### 🔄 自動化システム
 - **定期実行**: 毎日午後10時（JST）に仮説生成とフィードバック更新
@@ -30,31 +44,34 @@ LLMによる経済学の仮説生成・研究アイデア創出を実現する�
 - **信頼度評価**: AI による仮説の信頼度スコア
 - **包括的データ統合**: 複数ソースからのリアルタイムデータ収集
 
-## 🏗️ システム構成
+## 🏗️ システム構成（改良版）
 
 ```
 economics-hypothesis-generator/
-├── src/                    # Reactフロントエンド
+├── src/                    # Reactフロントエンド（完全独立動作）
 │   ├── components/         # UIコンポーネント
+│   │   ├── DiscussionPanel.jsx  # GitHub Issues連携ディスカッション
+│   │   ├── FeedbackModal.jsx    # フィードバック投稿
+│   │   └── FeedbackSummary.jsx  # フィードバック統計
 │   ├── App.jsx            # メインアプリケーション
 │   └── ...
-├── economics_api/          # Flaskバックエンド
-│   ├── src/                # バックエンドのソースコード
-│   │   ├── database/       # SQLiteデータベースファイル
-│   │   ├── models/         # データベースモデル
-│   │   ├── routes/         # APIルート定義
-│   │   └── main.py         # アプリケーションのエントリポイント
-│   └── venv/               # Python仮想環境
-├── scripts/               # 強化されたバックエンドスクリプト
-│   ├── generate_hypotheses.py  # 多元的データ収集・分析スクリプト
-│   └── requirements.txt   # Python依存関係
 ├── .github/workflows/     # GitHub Actions設定
-│   └── main.yml           # メインワークフローファイル (旧 generate-hypotheses.yml と jekyll-gh-pages.yml を統合)
+│   └── main.yml           # Gemini API統合ワークフロー
 ├── public/data/          # 生成データ保存場所
 │   ├── hypotheses.json   # 生成された仮説データ
 │   └── metadata.json     # メタデータ
+├── scripts/               # バックエンドスクリプト
+│   ├── generate_hypotheses.py  # 仮説生成スクリプト
+│   └── requirements.txt   # Python依存関係
 └── README.md
 ```
+
+### 🔧 技術スタック
+- **フロントエンド**: React 18 + Tailwind CSS + shadcn/ui
+- **AI分析**: Gemini 2.5 Flash API（直接統合）
+- **データ管理**: GitHub Issues API + 静的JSON
+- **デプロイ**: GitHub Pages + GitHub Actions
+- **セキュリティ**: GitHub Secrets（APIキー管理）
 
 ## 📈 データ収集機能
 
@@ -166,7 +183,17 @@ GitHub リポジトリの Settings > Secrets and variables > Actions で以下�
 2. 5段階評価とコメントを入力
 3. 送信すると自動的にGitHub Issueとして投稿
 
-### 3. フィードバックの確認
+### 3. ディスカッション機能
+1. 各仮説の「ディスカッション」ボタンをクリック
+2. 研究者同士で議論や意見交換が可能
+3. 返信機能で詳細な議論を展開
+
+### 4. AI分析コメント生成
+1. ディスカッションパネル内の「AI分析コメントを生成」ボタンをクリック
+2. Gemini 2.5 Flashが仮説を専門的観点から分析
+3. 理論的妥当性、実証可能性、政策的含意などを自動評価
+
+### 5. フィードバックの確認
 - 各仮説にフィードバック数と平均評価が表示
 - 詳細表示でカテゴリ別評価と最新コメントを確認
 - GitHub Issuesで全フィードバックの履歴を確認
@@ -244,10 +271,8 @@ GITHUB_TOKEN=your_github_token  # フィードバック機能用
 
 ---
 
-**最終更新**: 2024年7月31日
-**バージョン**: 2.0.0（フィードバック機能付き）
-
-
+**最終更新**: 2025年8月1日
+**バージョン**: 3.0.0（改良版 - CORS修正・Gemini API直接統合）
 
 ## 💻 ローカル開発環境のセットアップ
 
@@ -256,19 +281,27 @@ GITHUB_TOKEN=your_github_token  # フィードバック機能用
 ```bash
 cd economics-hypothesis-generator
 pnpm install
+
+# 環境変数の設定（.env.localファイルを作成）
+echo "REACT_APP_GEMINI_API_KEY=your_gemini_api_key_here" > .env.local
+
+# 開発サーバー起動
 pnpm dev
 ```
 
-### 2. バックエンドのセットアップ
+### 2. 改良点の確認
 
-```bash
-cd economics-hypothesis-generator/economics_api
-python3.11 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python src/main.py
-```
+改良版では以下の変更により、ローカル開発が簡素化されました：
 
-フロントエンドの `src/App.jsx` の `API_BASE_URL` を `http://localhost:5000/api` に戻してください。
+- **バックエンドサーバー不要**: 外部APIへの依存を削除
+- **GitHub Issues連携**: ディスカッション機能はGitHub Issues APIを直接使用
+- **Gemini API直接統合**: フロントエンドから直接Gemini APIを呼び出し
+- **完全スタティック**: GitHub Pagesで完全に独立動作
+
+### 3. 開発時の注意点
+
+- Gemini APIキーは `.env.local` ファイルで管理
+- 本番環境ではGitHub Secretsを使用
+- CORS問題は解決済み（外部バックエンド依存なし）
 
 
