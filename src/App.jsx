@@ -11,12 +11,14 @@ import { Brain, TrendingUp, BarChart3, Lightbulb, Clock, RefreshCw, Search, Filt
 import FeedbackModal from './components/FeedbackModal.jsx'
 import FeedbackSummary from './components/FeedbackSummary.jsx'
 import DiscussionPanel from './components/DiscussionPanel.jsx'
+import DiscussionSummary from './components/DiscussionSummary.jsx'
 import './App.css'
 
 function App() {
   const [hypotheses, setHypotheses] = useState([])
   const [filteredHypotheses, setFilteredHypotheses] = useState([])
   const [feedbacks, setFeedbacks] = useState({}) // 仮説IDをキーとするフィードバックデータ
+  const [discussions, setDiscussions] = useState({}) // 仮説IDをキーとするディスカッションデータ
   const [stats, setStats] = useState({
     totalHypotheses: 0,
     averageConfidence: 0,
@@ -40,6 +42,7 @@ function App() {
   useEffect(() => {
     loadHypotheses()
     loadFeedbacks()
+    loadDiscussions()
   }, [])
 
   useEffect(() => {
@@ -80,7 +83,7 @@ function App() {
   const loadFeedbacks = async () => {
     try {
       // GitHub Issues APIからフィードバックを取得
-      const response = await fetch('https://api.github.com/repos/tomoto0/economics-hypothesis-generator/issues?labels=feedback')
+      const response = await fetch("https://api.github.com/repos/tomoto0/economics-hypothesis-generator/issues?labels=feedback")
       const issues = await response.json()
       
       const feedbackData = {}
@@ -103,13 +106,43 @@ function App() {
             })
           }
         } catch (e) {
-          console.warn('フィードバックデータの解析に失敗:', e)
+          console.warn("フィードバックデータの解析に失敗:", e)
         }
       })
       
       setFeedbacks(feedbackData)
     } catch (error) {
-      console.error('フィードバックの読み込みに失敗しました:', error)
+      console.error("フィードバックの読み込みに失敗しました:", error)
+    }
+  }
+
+  const loadDiscussions = async () => {
+    try {
+      // GitHub Issues APIからディスカッションを取得
+      const response = await fetch("https://api.github.com/repos/tomoto0/economics-hypothesis-generator/issues?labels=discussion")
+      const issues = await response.json()
+
+      const discussionData = {}
+      issues.forEach(issue => {
+        const hypothesisIdMatch = issue.title.match(/ディスカッション: 仮説ID-(\d+)/);
+        if (hypothesisIdMatch) {
+          const hypothesisId = parseInt(hypothesisIdMatch[1]);
+          if (!discussionData[hypothesisId]) {
+            discussionData[hypothesisId] = [];
+          }
+          discussionData[hypothesisId].push({
+            id: issue.id,
+            title: issue.title,
+            body: issue.body,
+            created_at: issue.created_at,
+            user: issue.user.login,
+            issue_number: issue.number
+          });
+        }
+      });
+      setDiscussions(discussionData);
+    } catch (error) {
+      console.error("ディスカッションの読み込みに失敗しました:", error);
     }
   }
 
@@ -617,13 +650,14 @@ ${feedbackData.reviewer_info || '匿名'}
                       {hypothesis.description}
                     </CardDescription>
                     
-                    {/* フィードバック表示 */}
                     {feedbacks[hypothesis.id] && (
                       <div className="mb-4">
-                        <FeedbackSummary 
-                          hypothesis={hypothesis} 
-                          feedbacks={feedbacks[hypothesis.id]} 
-                        />
+                        <FeedbackSummary hypothesis={hypothesis} feedbacks={feedbacks[hypothesis.id]} />
+                      </div>
+                    )}
+                    {discussions[hypothesis.id] && (
+                      <div className="mb-4">
+                        <DiscussionSummary hypothesis={hypothesis} discussions={discussions[hypothesis.id]} />
                       </div>
                     )}
                     
