@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Send, ThumbsUp, ThumbsDown, Reply, Bot, User, Calendar, Building } from 'lucide-react';
 
-const DiscussionPanel = ({ hypothesisId, hypothesisData }) => {
+const DiscussionPanel = ({ hypothesisId, hypothesisData, onDiscussionUpdate }) => {
   const [discussions, setDiscussions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -187,6 +187,11 @@ ${newComment}
       setDiscussions(prev => [newDiscussion, ...prev])
       setNewComment('')
       
+      // 親コンポーネントにディスカッション更新を通知
+      if (onDiscussionUpdate) {
+        onDiscussionUpdate(hypothesisId, newDiscussion);
+      }
+      
       alert('ディスカッションを送信しました！GitHub Issuesで確認できます。')
     } catch (error) {
       console.error('ディスカッション送信エラー:', error)
@@ -272,7 +277,7 @@ ${replyContent}
   const triggerAIComment = async () => {
     try {
       // Gemini APIキーの確認（環境変数から取得、なければプロンプト表示）
-      const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         alert('Gemini APIキーが設定されていません。GitHub SecretsにGEMINI_API_KEYを設定してください。');
         return;
@@ -371,6 +376,11 @@ ${aiComment}
       
       // ローカルでディスカッションを更新
       setDiscussions(prev => [aiDiscussion, ...prev]);
+      
+      // 親コンポーネントにディスカッション更新を通知
+      if (onDiscussionUpdate) {
+        onDiscussionUpdate(hypothesisId, aiDiscussion);
+      }
       
       alert('AI分析コメントを生成しました！GitHub Issuesで確認できます。');
     } catch (error) {

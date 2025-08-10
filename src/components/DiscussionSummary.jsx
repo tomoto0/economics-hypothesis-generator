@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, User, Bot } from 'lucide-react';
 
 const DiscussionSummary = ({ hypothesis, discussions = [] }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const discussionCount = discussions.length;
+  const userDiscussions = discussions.filter(d => d.comment_type === 'user').length;
+  const aiDiscussions = discussions.filter(d => d.comment_type === 'ai').length;
 
   if (discussionCount === 0) {
-    return (
-      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-        <div className="flex items-center space-x-2 text-gray-500">
-          <MessageSquare className="w-5 h-5" />
-          <span className="text-sm">まだディスカッションがありません</span>
-        </div>
-      </div>
-    );
+    return null; // ディスカッションがない場合は何も表示しない
   }
 
   return (
@@ -29,6 +24,16 @@ const DiscussionSummary = ({ hypothesis, discussions = [] }) => {
                 {discussionCount} 件のディスカッション
               </span>
             </div>
+            <div className="flex items-center space-x-3 text-sm text-gray-600">
+              <div className="flex items-center space-x-1">
+                <User className="w-4 h-4" />
+                <span>{userDiscussions}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Bot className="w-4 h-4" />
+                <span>{aiDiscussions}</span>
+              </div>
+            </div>
           </div>
           <button
             onClick={() => setShowDetails(!showDetails)}
@@ -42,16 +47,53 @@ const DiscussionSummary = ({ hypothesis, discussions = [] }) => {
       {/* 詳細表示 */}
       {showDetails && (
         <div className="p-4 space-y-4">
-          {discussions.length > 0 && discussions[0].body && (
+          {/* 最新のコメント */}
+          {discussions.length > 0 && discussions[0].content && (
             <div>
               <h4 className="font-medium text-gray-900 mb-2">最新のコメント</h4>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm text-gray-700 italic">
-                  "{discussions[0].body.substring(0, 100)}..."
+                <div className="flex items-center space-x-2 mb-2">
+                  {discussions[0].comment_type === 'ai' ? (
+                    <Bot className="w-4 h-4 text-blue-600" />
+                  ) : (
+                    <User className="w-4 h-4 text-gray-600" />
+                  )}
+                  <span className="text-sm font-medium text-gray-700">
+                    {discussions[0].author_name}
+                  </span>
+                  {discussions[0].comment_type === 'ai' && (
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                      AI
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-700">
+                  {discussions[0].content.length > 150 
+                    ? `${discussions[0].content.substring(0, 150)}...` 
+                    : discussions[0].content}
                 </p>
                 <div className="mt-2 text-xs text-gray-500">
                   {new Date(discussions[0].created_at).toLocaleDateString('ja-JP')}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* 参加者情報 */}
+          {discussions.length > 1 && (
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">参加者</h4>
+              <div className="flex flex-wrap gap-2">
+                {[...new Set(discussions.map(d => d.author_name))].slice(0, 5).map((author, index) => (
+                  <div key={index} className="flex items-center space-x-1 bg-purple-50 rounded-lg px-2 py-1">
+                    <span className="text-xs text-purple-700">{author}</span>
+                  </div>
+                ))}
+                {[...new Set(discussions.map(d => d.author_name))].length > 5 && (
+                  <div className="text-xs text-gray-500 px-2 py-1">
+                    他 {[...new Set(discussions.map(d => d.author_name))].length - 5} 名
+                  </div>
+                )}
               </div>
             </div>
           )}

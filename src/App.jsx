@@ -254,6 +254,14 @@ ${feedbackData.reviewer_info || '匿名'}
     setShowDiscussion(true)
   }
 
+  const handleDiscussionUpdate = (hypothesisId, newDiscussion) => {
+    // ディスカッションが追加されたときに、discussionsステートを更新
+    setDiscussions(prev => ({
+      ...prev,
+      [hypothesisId]: [...(prev[hypothesisId] || []), newDiscussion]
+    }));
+  }
+
   const filterHypotheses = () => {
     let filtered = hypotheses
 
@@ -357,6 +365,7 @@ ${feedbackData.reviewer_info || '匿名'}
               <DiscussionPanel 
                 hypothesisId={discussionHypothesis.id}
                 hypothesisData={discussionHypothesis}
+                onDiscussionUpdate={handleDiscussionUpdate}
               />
             </DialogContent>
           </Dialog>
