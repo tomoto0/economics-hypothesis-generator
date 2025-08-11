@@ -49,11 +49,16 @@ function App() {
     filterHypotheses()
   }, [hypotheses, searchTerm, selectedCategory, minConfidence])
 
-  const loadHypotheses = async () => {
+  const loadHypotheses = async (forceRefresh = false) => {
     setIsLoading(true)
     try {
+      // 手動更新の場合は新しい仮説を生成
+      if (forceRefresh) {
+        await generateNewHypotheses()
+      }
+      
       // GitHub Pages環境では、静的JSONファイルから読み込み
-      const response = await fetch('/economics-hypothesis-generator/data/hypotheses.json')
+      const response = await fetch(`/economics-hypothesis-generator/data/hypotheses.json?t=${Date.now()}`)
       const data = await response.json()
       
       if (data.hypotheses) {
@@ -77,6 +82,99 @@ function App() {
       loadSampleData()
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const generateNewHypotheses = async () => {
+    try {
+      // Gemini APIキーの確認
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        alert('Gemini APIキーが設定されていません。GitHub SecretsにGEMINI_API_KEYを設定してください。');
+        return;
+      }
+
+      // Gemini APIを使用して新しい仮説を生成
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `経済学に関する新しい研究仮説を8つ生成してください。
+各仮説は以下のJSON形式で出力してください：
+
+{
+  "total_hypotheses": 8,
+  "generated_at": "${new Date().toISOString()}",
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "仮説のタイトル",
+      "description": "詳細な説明（200-300文字）",
+      "category": "カテゴリ（金融政策、マクロ経済学、国際経済学、労働経済学、環境経済学、デジタル経済学、金融市場、エネルギー経済学のいずれか）",
+      "confidence": 70-95の整数,
+      "research_methods": ["研究手法1", "研究手法2", "研究手法3", "研究手法4"],
+      "key_factors": ["重要要因1", "重要要因2", "重要要因3", "重要要因4"],
+      "data_sources_used": ["FRED", "World Bank", "Yahoo Finance", "CoinGecko"],
+      "policy_implications": ["政策含意1", "政策含意2"],
+      "novelty_score": 70-95の整数,
+      "feasibility_score": 65-95の整数,
+      "expected_impact": "期待される影響の説明",
+      "generated_at": "${new Date().toISOString()}"
+    }
+  ]
+}
+
+最新の経済動向、技術革新、社会変化を反映した革新的で実現可能な仮説を生成してください。`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.8,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 4096,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const generatedText = data.candidates[0].content.parts[0].text;
+
+      // JSON形式を抽出
+      let hypothesesData;
+      if (generatedText.includes('```json')) {
+        const start = generatedText.indexOf('```json') + 7;
+        const end = generatedText.indexOf('```', start);
+        const jsonText = generatedText.substring(start, end).trim();
+        hypothesesData = JSON.parse(jsonText);
+      } else {
+        hypothesesData = JSON.parse(generatedText);
+      }
+
+      // 生成日時を更新
+      const currentTime = new Date().toISOString();
+      hypothesesData.generated_at = currentTime;
+      
+      for (let i = 0; i < hypothesesData.hypotheses.length; i++) {
+        hypothesesData.hypotheses[i].id = i + 1;
+        hypothesesData.hypotheses[i].generated_at = currentTime;
+      }
+
+      // ローカルストレージに保存（GitHub Pagesでは直接ファイル更新不可のため）
+      localStorage.setItem('generated_hypotheses', JSON.stringify(hypothesesData));
+      
+      alert('新しい研究仮説を生成しました！ページを再読み込みして最新の仮説をご確認ください。');
+      
+    } catch (error) {
+      console.error('仮説生成エラー:', error);
+      alert('仮説の生成に失敗しました。APIキーを確認してもう一度お試しください。');
     }
   }
 
@@ -335,7 +433,7 @@ ${feedbackData.reviewer_info || '匿名'}
                 </div>
               )}
               <Button 
-                onClick={loadHypotheses} 
+                onClick={() => loadHypotheses(true)} 
                 disabled={isLoading} 
                 variant="outline"
                 className="bg-white/80 hover:bg-indigo-50 border-indigo-200 text-indigo-700 hover:text-indigo-800 transition-all duration-200"
