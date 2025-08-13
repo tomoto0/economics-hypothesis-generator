@@ -276,11 +276,17 @@ ${replyContent}
 
   const triggerAIComment = async () => {
     try {
-      // Gemini APIキーの確認（環境変数から取得、なければプロンプト表示）
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      // GitHub Actionsで設定されたAPIキーを使用
+      // GitHub Pagesでは環境変数が利用できないため、代替手段を使用
+      let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      // 環境変数が設定されていない場合は、ユーザーに入力を求める
       if (!apiKey) {
-        alert('Gemini APIキーが設定されていません。GitHub SecretsにGEMINI_API_KEYを設定してください。');
-        return;
+        apiKey = prompt('Gemini APIキーを入力してください:');
+        if (!apiKey) {
+          alert('APIキーが入力されませんでした。');
+          return;
+        }
       }
 
       // Gemini APIに直接リクエストを送信

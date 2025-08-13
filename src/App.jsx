@@ -87,11 +87,17 @@ function App() {
 
   const generateNewHypotheses = async () => {
     try {
-      // Gemini APIキーの確認
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      // GitHub Actionsで設定されたAPIキーを使用
+      // GitHub Pagesでは環境変数が利用できないため、代替手段を使用
+      let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      // 環境変数が設定されていない場合は、ユーザーに入力を求める
       if (!apiKey) {
-        alert('Gemini APIキーが設定されていません。GitHub SecretsにGEMINI_API_KEYを設定してください。');
-        return;
+        apiKey = prompt('Gemini APIキーを入力してください:');
+        if (!apiKey) {
+          alert('APIキーが入力されませんでした。');
+          return;
+        }
       }
 
       // Gemini APIを使用して新しい仮説を生成
@@ -167,10 +173,22 @@ function App() {
         hypothesesData.hypotheses[i].generated_at = currentTime;
       }
 
-      // ローカルストレージに保存（GitHub Pagesでは直接ファイル更新不可のため）
-      localStorage.setItem('generated_hypotheses', JSON.stringify(hypothesesData));
+      // 生成された仮説をステートに直接設定
+      setHypotheses(hypothesesData.hypotheses);
+      setLastUpdated(new Date(hypothesesData.generated_at));
       
-      alert('新しい研究仮説を生成しました！ページを再読み込みして最新の仮説をご確認ください。');
+      // 統計情報を更新
+      const categories = [...new Set(hypothesesData.hypotheses.map(h => h.category))];
+      const avgConfidence = hypothesesData.hypotheses.reduce((sum, h) => sum + h.confidence, 0) / hypothesesData.hypotheses.length;
+      
+      setStats({
+        totalHypotheses: hypothesesData.hypotheses.length,
+        averageConfidence: Math.round(avgConfidence),
+        categoriesCount: categories.length,
+        categories
+      });
+      
+      alert('新しい研究仮説を生成しました！');
       
     } catch (error) {
       console.error('仮説生成エラー:', error);
