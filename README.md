@@ -1,307 +1,122 @@
-# 経済学仮説生成システム - 改良版
+# 経済学仮説生成システム
 
-## はじめに
+![メインページスクリーンショット](assets/main_page_screenshot.jpeg)
 
-このプロジェクトは、AI（特にGemini API）を活用して経済学の革新的な研究仮説を自動生成するシステムです。多様な経済データソースから最新情報を収集し、高度な分析を通じて、研究者の皆様が新たな発見をするための強力なツールを提供します。
+## 概要
 
-LLMによる経済学の仮説生成・研究アイデア創出を実現するシステムです。GitHub ActionsでGemini APIによる分析を定期実行し、**幅広いデータソースから収集した最新の経済動向**に基づいた革新的な研究仮説を自動生成します。
+このプロジェクトは、AI（特にGoogle Gemini API）を活用して経済学の革新的な研究仮説を自動生成するシステムです。多様な経済データソースから最新情報を収集し、高度な分析を通じて、研究者の皆様が新たな発見をするための強力なツールを提供します。
 
-## 🆕 最新の改良点（2025年8月版）
+本システムは、LLMによる経済学の仮説生成・研究アイデア創出を実現し、GitHub Actionsと連携して**定期的な自動更新**と**手動での即時更新**を可能にしています。
 
-### 🔧 技術的改善
-- **CORSエラーの解決**: 外部バックエンドAPIへの依存を削除し、GitHub Pagesで完全に独立動作
-- **GitHub Issues連携の強化**: ディスカッション機能をGitHub Issues APIベースに完全移行
-- **Gemini API直接統合**: gemini-2.5-flashモデルを使用したAI分析コメント生成機能を実装
-- **セキュリティ向上**: GitHub Secretsを使用したAPIキー管理
+## 主な機能と特徴
 
-### 🚀 新機能
-- **AI分析コメント**: Gemini 2.5 Flashによる仮説の専門的分析
-- **改良されたディスカッション**: GitHub Issuesと連携した議論プラットフォーム
-- **独立動作**: 外部サーバーに依存しないフルスタティック構成
+### 1. AI駆動の仮説生成
+- **Google Gemini API**: 最新の経済動向、技術革新、社会変化を反映した革新的で実現可能な研究仮説を生成します。
+- **詳細な仮説構造**: 各仮説はタイトル、説明、カテゴリ、信頼度、推奨研究手法、重要要因、データソース、政策的含意、新規性、実現可能性、期待される影響などの多角的な情報を含みます。
 
-## 🆕 フィードバック・評価システム
+### 2. 自動更新と手動更新
+- **GitHub Actionsによる自動更新**: 3日に1回（JST 22:00）、GitHub Actionsが自動的に新しい仮説を生成し、Webサイトを更新します。
+- **「更新」ボタンによる手動更新**: Pagesのメインページにある「更新」ボタンをクリックすることで、ユーザーはいつでも新しい仮説を即座に生成・表示できます。
+  - APIキーが設定されていない場合でも、その場で入力することで機能を利用可能です。
 
-### ✨ 主要機能
-- **5段階評価システム**: 妥当性、実現可能性、新規性、政策的重要性、総合評価
-- **詳細フィードバック**: コメント、改善提案、関連研究の指摘
-- **GitHub Issue連携**: フィードバックは自動的にGitHub Issueとして投稿
-- **リアルタイム集計**: フィードバック統計の自動更新・表示
-- **研究者情報**: 任意で所属機関や専門分野を記録
-- **AI分析コメント**: Gemini 2.5 Flashによる専門的な仮説分析
+### 3. AI分析コメント
+- 各仮説に対して、Gemini AI Assistantが専門的な観点から分析コメントを生成します。
+- 理論的妥当性、実証研究の可能性、政策的含意、既存研究との関連性、改善提案などの視点から詳細な分析を提供します。
 
-### 🔄 自動化システム
-- **定期実行**: 毎日午後10時（JST）に仮説生成とフィードバック更新
-- **Issue連携**: フィードバックIssue作成時の自動処理
-- **手動トリガー**: GitHub UIから任意のタイミングで実行可能
-- **継続的デプロイ**: 生成結果とフィードバックを自動的にWebサイトに反映
+### 4. フィードバック・ディスカッションシステム
+- **フィードバック**: 各仮説に対して5段階評価（妥当性、実現可能性、新規性、政策的重要性、総合評価）と詳細なコメントを投稿できます。フィードバックは自動的にGitHub Issueとして記録されます。
+- **ディスカッション**: 各仮説に関する議論や意見交換が可能です。フィードバックと同様に、ディスカッションの件数や詳細がメインページに表示され、クリックで内容を確認できます。
+- **GitHub Issues連携**: フィードバックとディスカッションはGitHub Issues APIと連携しており、透明性の高い議論と記録が可能です。
 
-## 🌐 アクセス
+### 5. 直感的なユーザーインターフェース
+- **React + Tailwind CSS + shadcn/ui**: モダンでレスポンシブなWebインターフェースを提供し、仮説の閲覧、フィルタリング、評価、議論を容易にします。
+- **完全独立動作**: 外部バックエンドサーバーに依存しないフルスタティック構成で、GitHub Pages上で完全に独立して動作します。
 
-- **AI駆動の仮説生成**: Gemini APIを活用した高度な経済学仮説の自動生成
-- **定期自動更新**: GitHub Actionsによる毎日の自動分析・更新
-- **美しいWebインターフェース**: React製のモダンなダッシュボード
-- **研究支援機能**: 推奨研究手法や重要要因の提示
-- **信頼度評価**: AI による仮説の信頼度スコア
-- **包括的データ統合**: 複数ソースからのリアルタイムデータ収集
-
-## 🏗️ システム構成（改良版）
+## システム構成
 
 ```
 economics-hypothesis-generator/
-├── src/                    # Reactフロントエンド（完全独立動作）
-│   ├── components/         # UIコンポーネント
-│   │   ├── DiscussionPanel.jsx  # GitHub Issues連携ディスカッション
-│   │   ├── FeedbackModal.jsx    # フィードバック投稿
-│   │   └── FeedbackSummary.jsx  # フィードバック統計
-│   ├── App.jsx            # メインアプリケーション
+├── public/                 # 静的ファイル (GitHub Pagesでホスト)
+│   ├── data/               # 生成された仮説データ
+│   │   └── hypotheses.json # AIが生成した仮説データ
 │   └── ...
-├── .github/workflows/     # GitHub Actions設定
-│   └── main.yml           # Gemini API統合ワークフロー
-├── public/data/          # 生成データ保存場所
-│   ├── hypotheses.json   # 生成された仮説データ
-│   └── metadata.json     # メタデータ
-├── scripts/               # バックエンドスクリプト
-│   ├── generate_hypotheses.py  # 仮説生成スクリプト
-│   └── requirements.txt   # Python依存関係
-└── README.md
+├── src/                    # Reactフロントエンドアプリケーション
+│   ├── components/         # 再利用可能なUIコンポーネント
+│   │   ├── DiscussionPanel.jsx  # ディスカッション表示・投稿ロジック
+│   │   ├── DiscussionSummary.jsx # ディスカッション概要表示
+│   │   ├── FeedbackModal.jsx    # フィードバック投稿モーダル
+│   │   ├── FeedbackSummary.jsx  # フィードバック概要表示
+│   │   └── ...
+│   ├── App.jsx            # メインアプリケーションロジックとUI
+│   └── ...
+├── generate_hypotheses.py  # GitHub Actionsで実行される仮説生成Pythonスクリプト
+├── .github/workflows/      # GitHub Actionsワークフロー定義
+│   └── main.yml            # ビルド、デプロイ、自動仮説生成、自動コミット
+├── vite.config.js          # Vite (フロントエンドビルドツール) 設定
+└── README.md               # このドキュメント
 ```
 
-### 🔧 技術スタック
-- **フロントエンド**: React 18 + Tailwind CSS + shadcn/ui
-- **AI分析**: Gemini 2.5 Flash API（直接統合）
-- **データ管理**: GitHub Issues API + 静的JSON
-- **デプロイ**: GitHub Pages + GitHub Actions
-- **セキュリティ**: GitHub Secrets（APIキー管理）
+### 技術スタック
+- **フロントエンド**: React 18, Vite, Tailwind CSS, shadcn/ui
+- **AI**: Google Gemini 2.5 Flash API
+- **データ管理**: GitHub Issues API, 静的JSONファイル
+- **自動化・デプロイ**: GitHub Actions, GitHub Pages
+- **言語**: JavaScript (React), Python
 
-## 📈 データ収集機能
+## セットアップ手順
 
-### 1. 経済指標データ
-- **FRED**: GDP、CPI、失業率、金利、工業生産指数など
-- **世界銀行**: GDP成長率、インフレ率、貿易収支、FDI流入など
-- **リアルタイム更新**: 最新の経済統計を自動取得
-
-### 2. 金融市場データ
-- **株式指数**: S&P 500、NASDAQ、ダウ平均
-- **為替レート**: USD/JPY、EUR/USD
-- **商品価格**: 金、原油
-- **債券**: 10年国債利回り
-- **ボラティリティ**: VIX指数
-
-### 3. デジタル経済データ
-- **暗号通貨**: Bitcoin、Ethereum、主要アルトコイン
-- **価格変動**: 24時間変動率、市場キャップ
-- **市場動向**: デジタル資産の普及状況
-
-### 4. 経済カレンダー
-- **重要イベント**: 金利決定、雇用統計、GDP発表
-- **政策発表**: 中央銀行の政策変更
-- **国際会議**: G7、G20などの重要会合
-
-## 🔧 セットアップ手順
-
-### 1. リポジトリの準備
+### 1. リポジトリのクローン
 ```bash
 git clone https://github.com/tomoto0/economics-hypothesis-generator.git
 cd economics-hypothesis-generator
 ```
 
-### 2. 環境変数の設定
-GitHub リポジトリの Settings > Secrets and variables > Actions で以下を設定：
-
-- `GEMINI_API_KEY`: Google Gemini APIキー
-- `FRED_API_KEY`: FRED APIキー（オプション、より多くのデータ取得に必要）
+### 2. GitHub Secretsの設定
+Google Gemini APIキーをGitHubリポジトリのSecretsに設定します。
+1. GitHubリポジトリにアクセスし、「Settings」タブをクリック。
+2. 左サイドバーの「Secrets and variables」から「Actions」を選択。
+3. 「New repository secret」をクリックし、以下のシークレットを追加します。
+   - `GEMINI_API_KEY`: あなたのGoogle Gemini APIキー。
 
 ### 3. GitHub Pagesの有効化
-1. リポジトリの Settings > Pages
-2. Source: "GitHub Actions" を選択
-3. 保存
+1. リポジトリの「Settings」タブをクリック。
+2. 左サイドバーの「Pages」を選択。
+3. 「Build and deployment」セクションの「Source」で「GitHub Actions」を選択し、「Save」をクリック。
 
-### 4. 初回実行
-- Actions タブから "Deploy to GitHub Pages" ワークフローを手動実行
-- または、mainブランチにプッシュして自動実行
+### 4. 初回デプロイと自動更新の開始
+- `main`ブランチにプッシュすると、GitHub Actionsが自動的にトリガーされ、アプリケーションのビルドとGitHub Pagesへのデプロイが行われます。
+- 以降、3日に1回自動的に新しい仮説が生成され、サイトが更新されます。
 
-## 📊 生成される仮説の例（強化版）
+## ローカル開発環境のセットアップ
 
-```json
-{
-  "title": "多元的データソースによる金融政策効果の非線形分析",
-  "description": "従来の金融政策分析は単一データソースに依存していたが、FRED、世界銀行、暗号通貨市場データを統合することで、政策効果の非線形性と波及メカニズムをより精密に分析できる。",
-  "category": "金融政策",
-  "confidence": 88,
-  "research_methods": ["多変量時系列分析", "機械学習回帰", "ネットワーク分析"],
-  "key_factors": ["政策金利変化", "暗号通貨ボラティリティ", "国際資本フロー"],
-  "data_sources_used": ["FRED", "CoinGecko", "World Bank", "Yahoo Finance"],
-  "policy_implications": ["デジタル資産を考慮した金融政策設計", "クロスボーダー政策協調"],
-  "novelty_score": 92,
-  "feasibility_score": 85,
-  "expected_impact": "中央銀行のデジタル時代における政策フレームワーク再構築に貢献"
-}
-```
-
-## 📈 使用方法
-
-### 自動実行
-システムは毎日午後10時（JST）に自動的に実行され、最新の経済仮説を生成し、Webサイトを更新します。
-
-### 手動実行
-1. GitHubリポジトリのActionsタブを開く
-2. "Deploy to GitHub Pages" ワークフローを選択
-3. "Run workflow" ボタンをクリック
-4. 必要に応じて強制更新フラグを設定して実行
-
-### 結果の確認
-生成された仮説は以下で確認できます：
-- **Webサイト**: https://tomoto0.github.io/economics-hypothesis-generator
-- **JSONファイル**: `public/data/hypotheses.json`
-- **ログファイル**: Actions の Artifacts からダウンロード
-- **GitHubリポジトリ**: https://github.com/tomoto0/economics-hypothesis-generator
-- **フィードバックIssues**: https://github.com/tomoto0/economics-hypothesis-generator/issues?q=label%3Afeedback
-
-## 📊 データソース（強化版）
-
-### 経済データ
-- **FRED (Federal Reserve Economic Data)**: 米国経済指標
-- **World Bank Open Data**: 国際経済・開発指標
-- **Yahoo Finance**: 金融市場データ
-- **CoinGecko API**: 暗号通貨市場データ
-- **Economic Calendar**: 経済イベント・発表予定
-
-### AI分析
-- **Gemini 2.5 Flash**: 高度な仮説生成と分析
-- **多元的データ統合**: 複数ソースからの包括的分析
-- **リアルタイム処理**: 最新データに基づく動的分析
-
-## 🚀 使用方法
-
-### 1. 仮説の閲覧
-1. [Webサイト](https://tomoto0.github.io/economics-hypothesis-generator) にアクセス
-2. 生成された経済学仮説を閲覧
-3. カテゴリ、信頼度、キーワードでフィルタリング可能
-
-### 2. フィードバックの投稿
-1. 各仮説カードの「フィードバック」ボタンをクリック
-2. 5段階評価とコメントを入力
-3. 送信すると自動的にGitHub Issueとして投稿
-
-### 3. ディスカッション機能
-1. 各仮説の「ディスカッション」ボタンをクリック
-2. 研究者同士で議論や意見交換が可能
-3. 返信機能で詳細な議論を展開
-
-### 4. AI分析コメント生成
-1. ディスカッションパネル内の「AI分析コメントを生成」ボタンをクリック
-2. Gemini 2.5 Flashが仮説を専門的観点から分析
-3. 理論的妥当性、実証可能性、政策的含意などを自動評価
-
-### 5. フィードバックの確認
-- 各仮説にフィードバック数と平均評価が表示
-- 詳細表示でカテゴリ別評価と最新コメントを確認
-- GitHub Issuesで全フィードバックの履歴を確認
-
-## ⚙️ 設定
-
-### 必要な環境変数
+### 1. 依存関係のインストール
 ```bash
-GEMINI_API_KEY=your_gemini_api_key
-FRED_API_KEY=your_fred_api_key  # 任意
-GITHUB_TOKEN=your_github_token  # フィードバック機能用
+pnpm install
 ```
 
-### GitHub Secrets設定
-1. リポジトリの Settings → Secrets and variables → Actions
-2. 以下のシークレットを追加:
-   - `GEMINI_API_KEY`: Gemini APIキー
-   - `FRED_API_KEY`: FRED APIキー（任意）
+### 2. 環境変数の設定
+ローカル開発用に `.env` ファイルを作成し、Gemini APIキーを設定します。
+```
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
 
-## 🔧 技術仕様
+### 3. 開発サーバーの起動
+```bash
+pnpm dev
+```
+ブラウザで `http://localhost:5173` (または表示されたURL) にアクセスすると、開発サーバーが起動し、アプリケーションを確認できます。
 
-### フロントエンド
-- **React 18**: モダンなWebアプリケーション
-- **Tailwind CSS**: レスポンシブデザイン
-- **Lucide Icons**: 美しいアイコンセット
-- **GitHub Pages**: 静的サイトホスティング
+## 貢献
 
-### バックエンド
-- **Python 3.11**: データ処理とAPI連携
-- **GitHub Actions**: 自動化ワークフロー
-- **GitHub Issues API**: フィードバック管理
-- **JSON**: データ交換フォーマット
+このプロジェクトはオープンソースであり、貢献を歓迎します。バグ報告、機能提案、プルリクエストなど、どのような形でもご協力いただけると幸いです。
 
-### データ処理
-- **多元的データ収集**: 複数APIからの統合データ取得
-- **AI分析**: Gemini Proによる高度な仮説生成
-- **リアルタイム更新**: 最新データに基づく動的分析
+## ライセンス
 
-## 📈 期待される成果
-
-### 研究支援
-- **創造的研究活動**: AI生成仮説による新たな研究方向の発見
-- **研究効率向上**: 仮説生成時間の大幅短縮
-- **学際的アプローチ**: 複数分野にまたがる研究アイデア
-
-### 品質向上
-- **ピアレビュー**: 研究者コミュニティによる評価・改善
-- **継続的改善**: フィードバックに基づく仮説生成精度向上
-- **知識共有**: 関連研究や改善提案の蓄積
-
-### 政策支援
-- **政策立案支援**: 実証可能な政策仮説の提供
-- **影響評価**: 政策効果の事前予測と評価手法
-- **リアルタイム分析**: 最新データに基づく政策判断支援
-
-## 🤝 貢献方法
-
-### フィードバック投稿
-- Webサイトから直接フィードバックを投稿
-- GitHub Issuesで詳細な議論や提案
-
-### 開発貢献
-- Pull Requestによる機能改善
-- バグ報告や機能要望のIssue作成
-
-### 研究協力
-- 生成された仮説の実証研究
-- 研究結果のフィードバック共有
-
-## 📞 サポート
-
-- **Issues**: https://github.com/tomoto0/economics-hypothesis-generator/issues
-- **Discussions**: GitHub Discussionsで質問・議論
-- **Documentation**: このREADMEと各スクリプトのコメント
+[LICENSEファイルへのリンク、またはライセンスタイプを記載]
 
 ---
 
-**最終更新**: 2025年8月1日
-**バージョン**: 3.0.0（改良版 - CORS修正・Gemini API直接統合）
-
-## 💻 ローカル開発環境のセットアップ
-
-### 1. フロントエンドのセットアップ
-
-```bash
-cd economics-hypothesis-generator
-pnpm install
-
-# 環境変数の設定（.env.localファイルを作成）
-echo "REACT_APP_GEMINI_API_KEY=your_gemini_api_key_here" > .env.local
-
-# 開発サーバー起動
-pnpm dev
-```
-
-### 2. 改良点の確認
-
-改良版では以下の変更により、ローカル開発が簡素化されました：
-
-- **バックエンドサーバー不要**: 外部APIへの依存を削除
-- **GitHub Issues連携**: ディスカッション機能はGitHub Issues APIを直接使用
-- **Gemini API直接統合**: フロントエンドから直接Gemini APIを呼び出し
-- **完全スタティック**: GitHub Pagesで完全に独立動作
-
-### 3. 開発時の注意点
-
-- Gemini APIキーは `.env.local` ファイルで管理
-- 本番環境ではGitHub Secretsを使用
-- CORS問題は解決済み（外部バックエンド依存なし）
+**最終更新**: 2025年8月14日
+**バージョン**: 4.0.0 (自動更新・手動更新機能強化版)
 
 
