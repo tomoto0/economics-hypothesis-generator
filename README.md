@@ -91,14 +91,14 @@
                            │ tRPC
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Backend (Express 4)                       │
+│                    Backend (Express 4)                      │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │ tRPC Routers:                                        │   │
-│  │ - hypothesis.generate (キーワード入力)              │   │
-│  │ - hypothesis.getDetail (詳細取得)                   │   │
-│  │ - hypothesis.listAll (一覧取得)                     │   │
-│  │ - feedback.create (フィードバック投稿)             │   │
-│  │ - discussion.create (ディスカッション投稿)         │   │
+│  │ - hypothesis.generate (キーワード入力)              　　　　　　　　　　│   │
+│  │ - hypothesis.getDetail (詳細取得)                   　　　　　│   │
+│  │ - hypothesis.listAll (一覧取得)                     　　　　　│   │
+│  │ - feedback.create (フィードバック投稿)             　　　　　　　　　　　　　　　│   │
+│  │ - discussion.create (ディスカッション投稿)         　　　　　　　　　　　　　　　　│   │
 │  └──────────────────────────────────────────────────────┘   │
 └──────────────────────────┬──────────────────────────────────┘
                            │
