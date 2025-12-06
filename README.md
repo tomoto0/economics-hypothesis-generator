@@ -15,7 +15,9 @@
 - **詳細な仮説構造**: 各仮説はタイトル、説明、カテゴリ、信頼度、推奨研究手法、重要要因、データソース、政策的含意、新規性、実現可能性、期待される影響などの多角的な情報を含みます。
 
 ### 2. 自動更新と手動更新
-- **GitHub Actionsによる自動更新**: 3日に1回（JST 22:00）、GitHub Actionsが自動的に新しい仮説を生成し、Webサイトを更新します。
+- **デプロイ先**: このダッシュボードはGitHub Pagesにもデプロイ可能です。以下のURLからサンプルサイトにアクセスできます。
+  [https://tomoto0.github.io/economics-hypothesis-generator/](https://tomoto0.github.io/economics-hypothesis-generator/)
+- **GitHub Actionsによる自動更新**: 3日に1回（JST 22:00）、GitHub Actionsが自動的に新しい仮説を生成し、GitHub Pagesを更新します。
 - **「更新」ボタンによる手動更新**: Pagesのメインページにある「更新」ボタンをクリックすることで、ユーザーはいつでも新しい仮説を即座に生成・表示できます。
   - APIキーが設定されていない場合でも、その場で入力することで機能を利用可能です。
 
