@@ -22,7 +22,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '24'
+        node-version: '22'
 
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -36,12 +36,11 @@ jobs:
     - name: Generate new hypotheses
       id: generate
       run: python3 generate_hypotheses.py
-      continue-on-error: true
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
     - name: Commit updated hypotheses
-      if: steps.generate.outcome == 'success'
+      if: always() && steps.generate.outcome == 'success'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
