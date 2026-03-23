@@ -22,27 +22,74 @@ const extractJSON = (text) => {
 
   /**
    * JSON文字列をクリーニングしてパースを試みる内部関数
+   * 非常に強力な修復ロジックを実装
    */
   const tryParse = (str) => {
+    let input = str.trim();
+    if (!input) return null;
+
+    // 1. 基本的なパース
     try {
-      // 基本的なパース
-      return JSON.parse(str.trim());
-    } catch (e) {
-      try {
-        // 末尾のカンマや不完全な構造を修正して再試行
-        let fixed = str.trim()
-          .replace(/,\s*([\]}])/g, '$1') // 末尾のカンマを削除
-          .replace(/(\r\n|\n|\r)/gm, " "); // 改行をスペースに置換
+      return JSON.parse(input);
+    } catch (e) {}
 
-        // 文字列内の制御文字をエスケープ
-        fixed = fixed.replace(/[\u0000-\u001F\u007F-\u009F]/g, (c) => 
-          "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
-        );
+    // 2. 強力なクリーニングと修復
+    try {
+      let fixed = input
+        // 末尾のカンマを削除
+        .replace(/,\s*([\]}])/g, '$1')
+        // 文字列内の生の改行をスペースに置換（文字列リテラル内でのエラー防止）
+        .replace(/(?<=[:\[,])\s*"(.*?)"(?=\s*[,\]}])/gs, (match, p1) => {
+          return '"' + p1.replace(/\n/g, ' ') + '"';
+        });
 
-        return JSON.parse(fixed);
-      } catch (innerE) {
-        return null;
+      // 未完了の文字列（閉じ引用符がない）を閉じる
+      // 文字列の開始引用符を見つけ、それに対応する終了引用符がない場合に補完
+      let openQuotes = 0;
+      let lastQuoteIdx = -1;
+      for (let i = 0; i < fixed.length; i++) {
+        if (fixed[i] === '"' && (i === 0 || fixed[i-1] !== '\\')) {
+          openQuotes++;
+          lastQuoteIdx = i;
+        }
       }
+      if (openQuotes % 2 !== 0) {
+        fixed += '"';
+      }
+
+      // 未完了のオブジェクトや配列を閉じる
+      let stack = [];
+      for (let i = 0; i < fixed.length; i++) {
+        let char = fixed[i];
+        if (char === '{' || char === '[') {
+          stack.push(char === '{' ? '}' : ']');
+        } else if (char === '}' || char === ']') {
+          if (stack.length > 0 && stack[stack.length - 1] === char) {
+            stack.pop();
+          }
+        }
+      }
+      while (stack.length > 0) {
+        fixed += stack.pop();
+      }
+
+      // 制御文字のエスケープ
+      fixed = fixed.replace(/[\u0000-\u001F\u007F-\u009F]/g, (c) => 
+        "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
+      );
+
+      return JSON.parse(fixed);
+    } catch (e) {
+      // 最後の手段：部分的なパースを試みる（オブジェクトが途切れている場合など）
+      try {
+        // 最後の有効な } または ] を探してそれ以降を切り捨てる
+        const lastBrace = Math.max(input.lastIndexOf('}'), input.lastIndexOf(']'));
+        if (lastBrace !== -1) {
+          const truncated = input.substring(0, lastBrace + 1);
+          return JSON.parse(truncated);
+        }
+      } catch (innerE) {}
+      return null;
     }
   };
   
