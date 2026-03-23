@@ -35,29 +35,50 @@ const extractJSON = (text) => {
 
     // 2. 強力なクリーニングと修復
     try {
-      let fixed = input
-        // 末尾のカンマを削除
-        .replace(/,\s*([\]}])/g, '$1')
-        // 文字列内の生の改行をスペースに置換（文字列リテラル内でのエラー防止）
-        .replace(/(?<=[:\[,])\s*"(.*?)"(?=\s*[,\]}])/gs, (match, p1) => {
-          return '"' + p1.replace(/\n/g, ' ') + '"';
-        });
+      // 文字列リテラル内のエスケープされていないダブルクォートを修復する高度なロジック
+      // "key": "value with "quotes" inside" -> "key": "value with \"quotes\" inside"
+      let fixed = input.replace(/("(?:[^"\\]|\\.)*")|(\w+)/g, (match, string, word) => {
+        if (string) return string;
+        return match;
+      });
 
-      // 未完了の文字列（閉じ引用符がない）を閉じる
-      // 文字列の開始引用符を見つけ、それに対応する終了引用符がない場合に補完
+      // 改行の正規化
+      fixed = input.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+      // 文字列内の生の改行をエスケープ
+      // JSONの文字列はダブルクォートで囲まれている必要がある
+      let inString = false;
+      let result = "";
+      for (let i = 0; i < fixed.length; i++) {
+        let char = fixed[i];
+        if (char === '"' && (i === 0 || fixed[i-1] !== '\\')) {
+          inString = !inString;
+          result += char;
+        } else if (inString && char === '\n') {
+          result += "\\n";
+        } else if (inString && char === '\t') {
+          result += "\\t";
+        } else {
+          result += char;
+        }
+      }
+      fixed = result;
+
+      // 末尾のカンマを削除
+      fixed = fixed.replace(/,\s*([\]}])/g, '$1');
+
+      // 未完了の文字列を閉じる
       let openQuotes = 0;
-      let lastQuoteIdx = -1;
       for (let i = 0; i < fixed.length; i++) {
         if (fixed[i] === '"' && (i === 0 || fixed[i-1] !== '\\')) {
           openQuotes++;
-          lastQuoteIdx = i;
         }
       }
       if (openQuotes % 2 !== 0) {
         fixed += '"';
       }
 
-      // 未完了のオブジェクトや配列を閉じる
+      // 未完了の構造を閉じる
       let stack = [];
       for (let i = 0; i < fixed.length; i++) {
         let char = fixed[i];
@@ -73,19 +94,21 @@ const extractJSON = (text) => {
         fixed += stack.pop();
       }
 
-      // 制御文字のエスケープ
-      fixed = fixed.replace(/[\u0000-\u001F\u007F-\u009F]/g, (c) => 
-        "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
-      );
-
       return JSON.parse(fixed);
     } catch (e) {
-      // 最後の手段：部分的なパースを試みる（オブジェクトが途切れている場合など）
+      // 最後の手段：有効なJSON部分までを抽出してパース
       try {
-        // 最後の有効な } または ] を探してそれ以降を切り捨てる
         const lastBrace = Math.max(input.lastIndexOf('}'), input.lastIndexOf(']'));
         if (lastBrace !== -1) {
-          const truncated = input.substring(0, lastBrace + 1);
+          let truncated = input.substring(0, lastBrace + 1);
+          // 括弧のバランスを再チェック
+          let bCount = 0, sCount = 0;
+          for(let c of truncated) {
+            if(c === '{') bCount++; else if(c === '}') bCount--;
+            else if(c === '[') sCount++; else if(c === ']') sCount--;
+          }
+          while(bCount > 0) { truncated += '}'; bCount--; }
+          while(sCount > 0) { truncated += ']'; sCount--; }
           return JSON.parse(truncated);
         }
       } catch (innerE) {}
