@@ -159,13 +159,18 @@ function App() {
 
       // JSON形式を抽出
       let hypothesesData;
-      if (generatedText.includes('```json')) {
-        const start = generatedText.indexOf('```json') + 7;
-        const end = generatedText.indexOf('```', start);
-        const jsonText = generatedText.substring(start, end).trim();
-        hypothesesData = JSON.parse(jsonText);
+      const jsonMatch = generatedText.match(/```json\s*([\s\S]*?)\s*```/) || generatedText.match(/```\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        hypothesesData = JSON.parse(jsonMatch[1].trim());
       } else {
-        hypothesesData = JSON.parse(generatedText);
+        // コードブロックがない場合は、最初の { から最後の } までを抽出してみる
+        const startIdx = generatedText.indexOf('{');
+        const endIdx = generatedText.lastIndexOf('}');
+        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+          hypothesesData = JSON.parse(generatedText.substring(startIdx, endIdx + 1).trim());
+        } else {
+          hypothesesData = JSON.parse(generatedText.trim());
+        }
       }
 
       // 生成日時を更新

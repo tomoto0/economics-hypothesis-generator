@@ -51,13 +51,21 @@ def generate_hypotheses(api_key):
         generated_text = response.text
         
         # JSON形式を抽出
-        if '```json' in generated_text:
-            start = generated_text.find('```json') + 7
-            end = generated_text.find('```', start)
-            generated_text = generated_text[start:end].strip()
+        import re
+        json_match = re.search(r'```json\s*([\s\S]*?)\s*```', generated_text) or re.search(r'```\s*([\s\S]*?)\s*```', generated_text)
+        if json_match:
+            json_text = json_match.group(1).strip()
+        else:
+            # コードブロックがない場合は、最初の { から最後の } までを抽出してみる
+            start_idx = generated_text.find('{')
+            end_idx = generated_text.rfind('}')
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                json_text = generated_text[start_idx:end_idx + 1].strip()
+            else:
+                json_text = generated_text.strip()
         
         # JSONをパース
-        hypotheses_data = json.loads(generated_text)
+        hypotheses_data = json.loads(json_text)
         
         # 生成日時を更新
         current_time = datetime.utcnow().isoformat() + 'Z'
