@@ -6,27 +6,46 @@ import { MessageCircle, Send, ThumbsUp, ThumbsDown, Reply, Bot, User, Calendar, 
  */
 const extractJSON = (text) => {
   if (!text) return null;
+
+  /**
+   * JSON文字列をクリーニングしてパースを試みる内部関数
+   */
+  const tryParse = (str) => {
+    try {
+      // 基本的なパース
+      return JSON.parse(str.trim());
+    } catch (e) {
+      try {
+        // 末尾のカンマや不完全な構造を修正して再試行
+        let fixed = str.trim()
+          .replace(/,\s*([\]}])/g, '$1') // 末尾のカンマを削除
+          .replace(/(\r\n|\n|\r)/gm, " "); // 改行をスペースに置換
+
+        // 文字列内の制御文字をエスケープ
+        fixed = fixed.replace(/[\u0000-\u001F\u007F-\u009F]/g, (c) => 
+          "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
+        );
+
+        return JSON.parse(fixed);
+      } catch (innerE) {
+        return null;
+      }
+    }
+  };
   
   // 1. Markdownのコードブロックを検索 (```json ... ``` または ``` ... ```)
   const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/g;
   let match;
   while ((match = codeBlockRegex.exec(text)) !== null) {
-    try {
-      const cleanedJson = match[1].trim();
-      const json = JSON.parse(cleanedJson);
-      if (json) return json;
-    } catch (e) {
-      // JSONの途中に ```json が含まれている場合の対策として、
-      // ネストされたコードブロックの中身だけを取り出してみる
-      try {
-        const nestedMatch = cleanedJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (nestedMatch) {
-          const json = JSON.parse(nestedMatch[1].trim());
-          if (json) return json;
-        }
-      } catch (innerE) {
-        // 次のコードブロックを試す
-      }
+    const cleanedJson = match[1].trim();
+    const result = tryParse(cleanedJson);
+    if (result) return result;
+    
+    // ネストされたコードブロックの中身だけを取り出してみる
+    const nestedMatch = cleanedJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (nestedMatch) {
+      const nestedResult = tryParse(nestedMatch[1].trim());
+      if (nestedResult) return nestedResult;
     }
   }
 
@@ -35,24 +54,21 @@ const extractJSON = (text) => {
   const endIdx = text.lastIndexOf('}');
   if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
     const potentialJSON = text.substring(startIdx, endIdx + 1).trim();
-    try {
-      return JSON.parse(potentialJSON);
-    } catch (e) {
-      // 最後の手段へ
-    }
+    const result = tryParse(potentialJSON);
+    if (result) return result;
   }
 
   // 3. 最終手段: テキスト全体をパース（コードブロックの囲みがあれば除去）
-  try {
-    let cleanedText = text.trim();
-    if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-    }
-    return JSON.parse(cleanedText);
-  } catch (e) {
-    console.error("JSON parsing failed in extractJSON:", e);
-    throw e;
+  let cleanedText = text.trim();
+  if (cleanedText.startsWith('```')) {
+    cleanedText = cleanedText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
   }
+  const finalResult = tryParse(cleanedText);
+  if (finalResult) return finalResult;
+
+  // すべて失敗した場合は、エラーをスロー
+  console.error("JSON parsing failed in extractJSON for text:", text);
+  throw new Error("Invalid JSON format in LLM response");
 };
 
 const DiscussionPanel = ({ hypothesisId, hypothesisData, onDiscussionUpdate }) => {
