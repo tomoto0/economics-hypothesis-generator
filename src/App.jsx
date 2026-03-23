@@ -147,6 +147,10 @@ function App() {
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403 && errorData.error?.message?.includes('leaked')) {
+          throw new Error('API_KEY_LEAKED');
+        }
         throw new Error(`Gemini API error: ${response.status}`);
       }
 
@@ -192,7 +196,11 @@ function App() {
       
     } catch (error) {
       console.error('仮説生成エラー:', error);
-      alert('仮説の生成に失敗しました。APIキーを確認してもう一度お試しください。');
+      if (error.message === 'API_KEY_LEAKED') {
+        alert('設定されているAPIキーが漏洩しているため無効化されています。新しいAPIキーを取得し、GitHubのシークレットを更新するか、プロンプトに入力してください。');
+      } else {
+        alert('仮説の生成に失敗しました。APIキーを確認してもう一度お試しください。');
+      }
     }
   }
 

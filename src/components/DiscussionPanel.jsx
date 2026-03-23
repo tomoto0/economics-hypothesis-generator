@@ -327,6 +327,10 @@ ${replyContent}
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403 && errorData.error?.message?.includes('leaked')) {
+          throw new Error('API_KEY_LEAKED');
+        }
         throw new Error(`Gemini API error: ${response.status}`);
       }
 
@@ -391,7 +395,11 @@ ${aiComment}
       alert('AI分析コメントを生成しました！GitHub Issuesで確認できます。');
     } catch (error) {
       console.error('AI分析コメント生成エラー:', error);
-      alert('AI分析コメントの生成に失敗しました。APIキーを確認してもう一度お試しください。');
+      if (error.message === 'API_KEY_LEAKED') {
+        alert('設定されているAPIキーが漏洩しているため無効化されています。新しいAPIキーを取得し、GitHubのシークレットを更新するか、プロンプトに入力してください。');
+      } else {
+        alert('AI分析コメントの生成に失敗しました。APIキーを確認してもう一度お試しください。');
+      }
     }
   };
 
