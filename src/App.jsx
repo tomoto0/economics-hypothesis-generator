@@ -21,14 +21,26 @@ const extractJSON = (text) => {
   if (!text) return null;
   
   // 1. Markdownのコードブロックを検索 (```json ... ``` または ``` ... ```)
+  // より柔軟な正規表現を使用して、余分な空白や改行を許容する
   const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/g;
   let match;
   while ((match = codeBlockRegex.exec(text)) !== null) {
     try {
-      const json = JSON.parse(match[1].trim());
+      const cleanedJson = match[1].trim();
+      const json = JSON.parse(cleanedJson);
       if (json) return json;
     } catch (e) {
-      // 次のコードブロックを試す
+      // JSONの途中に ```json が含まれている場合の対策として、
+      // ネストされたコードブロックの中身だけを取り出してみる
+      try {
+        const nestedMatch = cleanedJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (nestedMatch) {
+          const json = JSON.parse(nestedMatch[1].trim());
+          if (json) return json;
+        }
+      } catch (innerE) {
+        // 次のコードブロックを試す
+      }
     }
   }
 
@@ -44,9 +56,13 @@ const extractJSON = (text) => {
     }
   }
 
-  // 3. 最終手段: テキスト全体をパース
+  // 3. 最終手段: テキスト全体をパース（コードブロックの囲みがあれば除去）
   try {
-    return JSON.parse(text.trim());
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+    }
+    return JSON.parse(cleanedText);
   } catch (e) {
     console.error("JSON parsing failed in extractJSON:", e);
     throw e;
@@ -245,9 +261,8 @@ function App() {
       issues.forEach(issue => {
         try {
           // Issue本文からフィードバックデータを抽出
-          const match = issue.body.match(/```json\n([\s\S]*?)\n```/)
-          if (match) {
-            const feedback = JSON.parse(match[1])
+          const feedback = extractJSON(issue.body)
+          if (feedback) {
             const hypothesisId = feedback.hypothesis_id
             
             if (!feedbackData[hypothesisId]) {

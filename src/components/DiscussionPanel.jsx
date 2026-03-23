@@ -12,10 +12,21 @@ const extractJSON = (text) => {
   let match;
   while ((match = codeBlockRegex.exec(text)) !== null) {
     try {
-      const json = JSON.parse(match[1].trim());
+      const cleanedJson = match[1].trim();
+      const json = JSON.parse(cleanedJson);
       if (json) return json;
     } catch (e) {
-      // 次のコードブロックを試す
+      // JSONの途中に ```json が含まれている場合の対策として、
+      // ネストされたコードブロックの中身だけを取り出してみる
+      try {
+        const nestedMatch = cleanedJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (nestedMatch) {
+          const json = JSON.parse(nestedMatch[1].trim());
+          if (json) return json;
+        }
+      } catch (innerE) {
+        // 次のコードブロックを試す
+      }
     }
   }
 
@@ -31,9 +42,13 @@ const extractJSON = (text) => {
     }
   }
 
-  // 3. 最終手段: テキスト全体をパース
+  // 3. 最終手段: テキスト全体をパース（コードブロックの囲みがあれば除去）
   try {
-    return JSON.parse(text.trim());
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+    }
+    return JSON.parse(cleanedText);
   } catch (e) {
     console.error("JSON parsing failed in extractJSON:", e);
     throw e;
@@ -76,9 +91,8 @@ const DiscussionPanel = ({ hypothesisId, hypothesisData, onDiscussionUpdate }) =
       issues.forEach(issue => {
         try {
           // Issue本文からディスカッションデータを抽出
-          const match = issue.body.match(/```json\n([\s\S]*?)\n```/);
-          if (match) {
-            const discussion = JSON.parse(match[1]);
+          const discussion = extractJSON(issue.body);
+          if (discussion) {
             if (discussion.hypothesis_id == hypothesisId) {
               discussionData.push({
                 id: issue.number,
