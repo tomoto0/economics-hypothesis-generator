@@ -1,6 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Send, ThumbsUp, ThumbsDown, Reply, Bot, User, Calendar, Building } from 'lucide-react';
 
+/**
+ * Gemini APIのレスポンスからJSONを抽出するユーティリティ
+ */
+const extractJSON = (text) => {
+  if (!text) return null;
+  
+  // 1. Markdownのコードブロックを検索 (```json ... ``` または ``` ... ```)
+  const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/g;
+  let match;
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    try {
+      const json = JSON.parse(match[1].trim());
+      if (json) return json;
+    } catch (e) {
+      // 次のコードブロックを試す
+    }
+  }
+
+  // 2. コードブロックが見つからない、またはパースに失敗した場合は、最初の { から最後の } までを抽出
+  const startIdx = text.indexOf('{');
+  const endIdx = text.lastIndexOf('}');
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    const potentialJSON = text.substring(startIdx, endIdx + 1).trim();
+    try {
+      return JSON.parse(potentialJSON);
+    } catch (e) {
+      // 最後の手段へ
+    }
+  }
+
+  // 3. 最終手段: テキスト全体をパース
+  try {
+    return JSON.parse(text.trim());
+  } catch (e) {
+    console.error("JSON parsing failed in extractJSON:", e);
+    throw e;
+  }
+};
+
 const DiscussionPanel = ({ hypothesisId, hypothesisData, onDiscussionUpdate }) => {
   const [discussions, setDiscussions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -335,7 +374,19 @@ ${replyContent}
       }
 
       const data = await response.json();
-      const aiComment = data.candidates[0].content.parts[0].text;
+      const generatedText = data.candidates[0].content.parts[0].text;
+      
+      // JSON形式が含まれている可能性があるため、抽出を試みる
+      let aiComment = generatedText;
+      try {
+        const extracted = extractJSON(generatedText);
+        if (extracted && typeof extracted === 'object') {
+          // もしJSONとしてパースでき、特定のフィールドがあればそれを使う
+          aiComment = extracted.comment || extracted.analysis || extracted.content || JSON.stringify(extracted);
+        }
+      } catch (e) {
+        // JSONでない場合はそのままテキストとして扱う
+      }
 
       // AI分析コメントをディスカッションとして追加
       const aiDiscussion = {
